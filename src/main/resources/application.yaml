@@ -1,1 +1,21 @@
+#server:
+#  servlet:
+#    session:
+#      timeout: 10800
+#      cookie:
+#        max-age: 1800
+#        secure: true
+#        http-only: true
 
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/liveminds
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true

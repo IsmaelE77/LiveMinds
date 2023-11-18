@@ -35,9 +35,8 @@ public class AppUser {
     private String password;
 
     @NotNull
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "role_id")
+    @OneToMany
+    @JoinColumn(name = "id")
     private Set<Role> roles;
 
 
