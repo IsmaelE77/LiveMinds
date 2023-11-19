@@ -39,9 +39,9 @@ public class AppUser {
     private String password;
 
     @NotNull
-    @OneToMany
-    @JoinColumn(name = "id")
-    private Set<Role> roles;
+    @OneToOne
+    @JoinColumn(name = "ROLE_ID")
+    private Role role;
 
 
     @OneToMany(mappedBy = "broadcaster", cascade = CascadeType.ALL , fetch = FetchType.LAZY)

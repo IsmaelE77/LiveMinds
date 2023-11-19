@@ -42,3 +42,8 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+#Idea and plugins
+.idea
+.jpb
+qodana.yaml
