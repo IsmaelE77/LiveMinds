@@ -1,6 +1,7 @@
 package io.github.ismaele77.LiveMinds.Controller;
 
 import io.github.ismaele77.LiveMinds.DTO.CreateRoomRequest;
+import io.github.ismaele77.LiveMinds.DTO.ParticipantDto;
 import io.github.ismaele77.LiveMinds.DTO.RoomDto;
 import io.github.ismaele77.LiveMinds.Model.AppUser;
 import io.github.ismaele77.LiveMinds.Repository.AppUserRepository;
@@ -150,7 +151,7 @@ RoomController {
 
     @GetMapping("/{roomName}/token")
     public ResponseEntity<?> getRoomToken(@PathVariable String roomName ,@RequestParam Long userId) {
-        if (!roomRepository.existsById(roomName)) {
+        if (!roomRepository.existsByName(roomName)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Room with name " + roomName + " not exists.");
         }
@@ -166,6 +167,55 @@ RoomController {
         }
 
         return ResponseEntity.ok(accessToken.toJwt());
+    }
+
+    @GetMapping("/{roomName}/participants")
+    public ResponseEntity<?> getParticipants(@PathVariable String roomName){
+        if (!roomRepository.existsByName(roomName)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Room with name " + roomName + " not exists.");
+        }
+        var roomParticipantsList = roomLiveKit.getParticipantList(roomName);
+        List<ParticipantDto> participantsInfo = new ArrayList<ParticipantDto>();
+        for (var participant : roomParticipantsList) {
+            ParticipantDto user = new ParticipantDto();
+            user.setName(participant.getName());
+            user.setIdentity(participant.getIdentity());
+            participantsInfo.add(user);
+        }
+        return ResponseEntity.ok(participantsInfo);
+    }
+
+    @PostMapping("/{roomName}/participants/{participantIdentity}/canPublish")
+    public ResponseEntity<?> givePublishPermission(@PathVariable String roomName ,
+                                                   @PathVariable String participantIdentity , @RequestBody boolean canPublish){
+        if (!roomRepository.existsByName(roomName)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Room with name " + roomName + " not exists.");
+        }
+        boolean result = roomLiveKit.givePublishPermission(roomName,participantIdentity,canPublish);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{roomName}/participants/{participantIdentity}/mute")
+    public ResponseEntity<?> muteParticipant(@PathVariable String roomName ,
+                                                   @PathVariable String participantIdentity , @RequestBody boolean mute){
+        if (!roomRepository.existsByName(roomName)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Room with name " + roomName + " not exists.");
+        }
+        boolean result = roomLiveKit.muteParticipant(roomName,participantIdentity,mute);
+        return ResponseEntity.ok(result);
+    }
+    @PostMapping("/{roomName}/participants/{participantIdentity}/expel")
+    public ResponseEntity<?> expelParticipant(@PathVariable String roomName ,
+                                             @PathVariable String participantIdentity){
+        if (!roomRepository.existsByName(roomName)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Room with name " + roomName + " not exists.");
+        }
+        boolean result = roomLiveKit.expelParticipant(roomName,participantIdentity);
+        return ResponseEntity.ok(result);
     }
 
 }
