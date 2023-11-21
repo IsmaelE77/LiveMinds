@@ -10,6 +10,7 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class RoomLiveKitService {
@@ -20,18 +21,9 @@ public class RoomLiveKitService {
         this.roomServiceClient = roomServiceClient;
     }
 
+
     public boolean CreateRoom(Room room){
-        // get the current time
-        Date currentTime = new Date();
-
-        Calendar calendar1 = Calendar.getInstance();
-        calendar1.setTime(currentTime);
-
-        Calendar calendar2 = Calendar.getInstance();
-        calendar2.setTime(room.getTime());
-
-        int roomTime = calculateSecondsDifference(calendar1, calendar2) + emptyTimeout ;
-        System.out.println(roomTime);
+        int roomTime = getRoomTime(room);
         Call<LivekitModels.Room> call = roomServiceClient.createRoom(room.getName(), roomTime);
         try {
             call.execute();
@@ -41,7 +33,26 @@ public class RoomLiveKitService {
         return true;
     }
 
-    private static int calculateSecondsDifference(Calendar calendar1, Calendar calendar2) {
+    public boolean UpdateRoom(Room room){
+        roomServiceClient.deleteRoom(room.getName());
+        return CreateRoom(room);
+    }
+
+
+
+    private int getRoomTime(Room room){
+        // get the current time
+        Date currentTime = new Date();
+
+        Calendar calendar1 = Calendar.getInstance();
+        calendar1.setTime(currentTime);
+
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.setTime(room.getTime());
+
+        return calculateSecondsDifference(calendar1, calendar2) + emptyTimeout ;
+    }
+    private int calculateSecondsDifference(Calendar calendar1, Calendar calendar2) {
         long milliseconds1 = calendar1.getTimeInMillis();
         long milliseconds2 = calendar2.getTimeInMillis();
         long diff = milliseconds2 - milliseconds1;

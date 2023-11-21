@@ -9,7 +9,6 @@ import io.github.ismaele77.LiveMinds.Model.Room;
 import io.github.ismaele77.LiveMinds.Service.RoomLiveKitService;
 import io.livekit.server.*;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PostUpdate;
 import jakarta.validation.Valid;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -33,14 +32,12 @@ RoomController {
     private final RoomRepository roomRepository;
     private final AppUserRepository appUserRepository;
     private final RoomLiveKitService roomLiveKit;
-    private final RoomServiceClient roomServiceClient;
     private final AccessToken accessToken;
 
-    public RoomController(RoomRepository roomRepository, AppUserRepository appUserRepository, RoomLiveKitService roomLiveKit, RoomServiceClient roomServiceClient, AccessToken accessToken) {
+    public RoomController(RoomRepository roomRepository, AppUserRepository appUserRepository, RoomLiveKitService roomLiveKit, AccessToken accessToken) {
         this.roomRepository = roomRepository;
         this.appUserRepository = appUserRepository;
         this.roomLiveKit = roomLiveKit;
-        this.roomServiceClient = roomServiceClient;
         this.accessToken = accessToken;
     }
 
@@ -140,14 +137,16 @@ RoomController {
         room.setProfessorClass(createRoomRequest.getProfessorClass());
         room.setTime(createRoomRequest.getTime());
 
+        if (!roomLiveKit.UpdateRoom(room)) {
+            return ResponseEntity.internalServerError().build();
+        }
+
         roomRepository.save(room);
 
         URI location = linkTo(RoomController.class).slash(room.getName()).toUri();
 
         return ResponseEntity.created(location).body("Room updated successfully");
     }
-
-
 
     @GetMapping("/{roomName}/token")
     public ResponseEntity<?> getRoomToken(@PathVariable String roomName ,@RequestParam Long userId) {
@@ -168,7 +167,5 @@ RoomController {
 
         return ResponseEntity.ok(accessToken.toJwt());
     }
-
-
 
 }
