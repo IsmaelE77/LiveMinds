@@ -33,9 +33,8 @@ public class RoomLiveKitService {
         int roomTime = calculateSecondsDifference(calendar1, calendar2) + emptyTimeout ;
         System.out.println(roomTime);
         Call<LivekitModels.Room> call = roomServiceClient.createRoom(room.getName(), roomTime);
-        Response<LivekitModels.Room> response = null; // Use call.enqueue for async
         try {
-            response = call.execute();
+            call.execute();
         } catch (IOException e) {
             return false;
         }

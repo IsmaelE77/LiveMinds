@@ -1,6 +1,7 @@
 package io.github.ismaele77.LiveMinds.Model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -42,7 +43,6 @@ public class AppUser {
     @OneToOne
     @JoinColumn(name = "ROLE_ID")
     private Role role;
-
 
     @OneToMany(mappedBy = "broadcaster", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
     private List<Room> rooms;

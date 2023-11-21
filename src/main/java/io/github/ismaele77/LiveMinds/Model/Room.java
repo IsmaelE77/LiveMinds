@@ -1,12 +1,10 @@
 package io.github.ismaele77.LiveMinds.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.sql.Date;
 
@@ -16,9 +14,12 @@ import java.sql.Date;
 @Builder
 @Setter
 @Getter
-public class Room {
+public class Room extends RepresentationModel<Room>{
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
     @NotBlank
     private String name;
 
