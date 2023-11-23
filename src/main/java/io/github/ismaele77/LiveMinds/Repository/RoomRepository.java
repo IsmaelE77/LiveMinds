@@ -9,7 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Date;
 import java.util.Optional;
 
-public interface RoomRepository extends CrudRepository<Room, String> {
+public interface RoomRepository extends CrudRepository<Room, Integer> {
     boolean existsByName(String roomName);
+    boolean deleteByName(String roomName);
     Optional<Room> findByName(String roomName);
 }

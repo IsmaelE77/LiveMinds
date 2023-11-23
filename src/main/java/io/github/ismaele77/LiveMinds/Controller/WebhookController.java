@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/webhook-endpoint")
+@CrossOrigin(origins="*")
 public class WebhookController {
 
     private final WebhookReceiver webhookReceiver;
@@ -32,7 +33,7 @@ public class WebhookController {
         } else if(event.getEvent().equals("room_finished")){
             LivekitModels.Room room = event.getRoom();
             logger.info("Received webhook event: {}", event.getEvent());
-            roomRepository.deleteById(room.getName());
+            roomRepository.deleteByName(room.getName());
             logger.info("the room : "+room.getName()+" deleted");
         }
     }

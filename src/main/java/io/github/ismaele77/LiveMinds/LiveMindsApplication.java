@@ -1,13 +1,19 @@
 package io.github.ismaele77.LiveMinds;
 
+import io.github.ismaele77.LiveMinds.Enum.UserRole;
+import io.github.ismaele77.LiveMinds.Model.AppUser;
+import io.github.ismaele77.LiveMinds.Model.Role;
+import io.github.ismaele77.LiveMinds.Repository.AppUserRepository;
 import io.livekit.server.*;
 import livekit.LivekitModels;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -25,7 +31,6 @@ public class LiveMindsApplication {
 
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(LiveMindsApplication.class, args);
-
 //		RoomServiceClient roomServiceClient = RoomServiceClient.create(
 //				"https://isteqra-lectures-1ntumk04.livekit.cloud",
 //				"APIeWv9jLhoJCmt",
@@ -39,6 +44,19 @@ public class LiveMindsApplication {
 //				.setCanPublish(false).build()).execute().body();
 //		System.out.println(response.isInitialized());
 		//roomServiceClient.mutePublishedTrack("ITE_BNA_C2",r.getIdentity() , "PA_ZPwmZ9Me9Egv",false).execute();
+	}
+
+	@Bean
+	public CommandLineRunner demo(AppUserRepository userRepository , PasswordEncoder encoder) {
+		return (args) -> {
+			AppUser user = userRepository.findById(2L).get();
+			user.setPassword(encoder.encode("admin"));
+			user.setRole(new Role(3L,"Professor"));
+			userRepository.save(user);
+			AppUser user2 = userRepository.findById(3L).get();
+			user2.setPassword(encoder.encode("2134990"));
+			userRepository.save(user2);
+		};
 	}
 
 	@Bean

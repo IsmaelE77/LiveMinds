@@ -1,11 +1,11 @@
-#server:
-#  servlet:
-#    session:
-#      timeout: 10800
-#      cookie:
-#        max-age: 1800
-#        secure: true
-#        http-only: true
+server:
+  servlet:
+    session:
+      timeout: 10800
+      cookie:
+        max-age: 1800
+        secure: true
+        http-only: true
 
 spring:
   datasource:
