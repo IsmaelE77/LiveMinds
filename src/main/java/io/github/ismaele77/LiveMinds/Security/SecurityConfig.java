@@ -62,6 +62,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(requests -> requests
                 .requestMatchers("/api/v1/login").permitAll()
                 .requestMatchers("/api/v1/logout").permitAll()
+                .requestMatchers("/webhook-endpoint").permitAll()
                 .anyRequest().authenticated()
             )
             .securityContext((context) -> context
@@ -70,12 +71,11 @@ public class SecurityConfig {
             .csrf(httpSecurityCsrfConfigurer -> {
                 httpSecurityCsrfConfigurer.disable();
             })
-
             .cors(Customizer.withDefaults());
 
-//        http.sessionManagement( session -> session
-//                .maximumSessions(2)
-//        );
+        http.sessionManagement( session -> session
+                .maximumSessions(2)
+        );
 
         return http.build();
     }

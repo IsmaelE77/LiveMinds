@@ -1,17 +1,14 @@
 package io.github.ismaele77.LiveMinds.Service;
 
-import io.github.ismaele77.LiveMinds.DTO.ParticipantDto;
 import io.github.ismaele77.LiveMinds.Model.Room;
+import io.livekit.server.EgressServiceClient;
 import io.livekit.server.RoomServiceClient;
+import livekit.LivekitEgress;
 import livekit.LivekitModels;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import retrofit2.Call;
-import retrofit2.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -19,8 +16,11 @@ import java.util.List;
 @Component
 public class RoomLiveKitService {
 
+
     private final RoomServiceClient roomServiceClient;
     private final int emptyTimeout = 3 * 60 * 60;
+
+//    private final EgressServiceClient egressServiceClient;
     public RoomLiveKitService(RoomServiceClient roomServiceClient){
         this.roomServiceClient = roomServiceClient;
     }
@@ -43,14 +43,11 @@ public class RoomLiveKitService {
     }
 
     public List<LivekitModels.ParticipantInfo> getParticipantList(String roomName){
-        List<LivekitModels.ParticipantInfo> participants = null;
         try {
-            participants = roomServiceClient.listParticipants(roomName).execute().body();
+            return roomServiceClient.listParticipants(roomName).execute().body();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        return participants;
     }
 
     public boolean givePublishPermission(String roomName , String participantIdentity ,boolean canPublish){
@@ -89,6 +86,26 @@ public class RoomLiveKitService {
             return false;
         }
     }
+
+//    private void startRecode(String roomName){
+//        LivekitEgress.EncodedFileOutput output = LivekitEgress.EncodedFileOutput.newBuilder()
+//                .setFileType(LivekitEgress.EncodedFileType.MP4)
+//                .setFilepath("test-recording.mp4")
+//                .build();
+//
+//        Call<LivekitEgress.EgressInfo> call = egressServiceClient.startRoomCompositeEgress(
+//                roomName,
+//                output
+//        );
+//        try {
+//            LivekitEgress.EgressInfo egressInfo = call.execute().body();
+//            System.out.println(egressInfo.getEgressId());
+//            // handle engress info
+//        } catch (IOException e) {
+//            // handle error
+//            System.out.println(e.getMessage());
+//        }
+//    }
 
     private int getRoomTime(Room room){
         // get the current time
