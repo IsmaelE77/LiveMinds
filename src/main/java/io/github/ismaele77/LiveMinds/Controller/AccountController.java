@@ -49,6 +49,7 @@ public class AccountController {
         try {
             request.logout();
         } catch (ServletException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>("User logout successfully!.", HttpStatus.OK);
     }

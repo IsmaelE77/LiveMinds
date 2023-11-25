@@ -11,6 +11,11 @@ import java.util.Optional;
 
 public interface RoomRepository extends CrudRepository<Room, Integer> {
     boolean existsByName(String roomName);
-    boolean deleteByName(String roomName);
+
+    @Transactional
+    @Modifying
+    @Query("delete from Room r where r.name = ?1")
+    void deleteByName(String name);
+
     Optional<Room> findByName(String roomName);
 }
