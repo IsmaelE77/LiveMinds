@@ -2,11 +2,9 @@ package io.github.ismaele77.LiveMinds.DTO;
 
 import io.github.ismaele77.LiveMinds.Model.Room;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.hateoas.RepresentationModel;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class RoomDto extends RepresentationModel<RoomDto> {
@@ -14,7 +12,7 @@ public class RoomDto extends RepresentationModel<RoomDto> {
     private String program;
     private String course;
     private String professorClass;
-    private Date time;
+    private LocalDateTime time;
     private String broadcasterName;
 
     public RoomDto(){

@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Setter
 @Getter
 public class AppUser implements UserDetails {

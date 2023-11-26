@@ -5,8 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.hateoas.RepresentationModel;
-
-import java.sql.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
@@ -33,7 +32,7 @@ public class Room extends RepresentationModel<Room>{
     private String ProfessorClass;
 
     @NotNull
-    private Date time;
+    private LocalDateTime time;
 
     @NotNull
     @ManyToOne

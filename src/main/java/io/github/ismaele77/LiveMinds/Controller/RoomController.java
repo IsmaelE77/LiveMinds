@@ -3,7 +3,7 @@ package io.github.ismaele77.LiveMinds.Controller;
 import io.github.ismaele77.LiveMinds.DTO.CreateRoomRequest;
 import io.github.ismaele77.LiveMinds.DTO.ParticipantDto;
 import io.github.ismaele77.LiveMinds.DTO.RoomDto;
-import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundAdvice;
+import io.github.ismaele77.LiveMinds.Exception.AccessDeniedException;
 import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundException;
 import io.github.ismaele77.LiveMinds.Model.AppUser;
 import io.github.ismaele77.LiveMinds.Repository.AppUserRepository;
@@ -11,7 +11,6 @@ import io.github.ismaele77.LiveMinds.Repository.RoomRepository;
 import io.github.ismaele77.LiveMinds.Model.Room;
 import io.github.ismaele77.LiveMinds.Service.RoomLiveKitService;
 import io.livekit.server.*;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.hateoas.CollectionModel;
@@ -20,6 +19,7 @@ import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +31,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/v1/rooms")
-@CrossOrigin(origins="*")
 public class
 RoomController {
 
@@ -76,20 +75,12 @@ RoomController {
         return ResponseEntity.ok(EntityModel.of(roomDto));
     }
 
-    @DeleteMapping("/{roomName}")
-    @PreAuthorize("hasRole('Professor')")
-    ResponseEntity<?> deleteByName(@PathVariable String roomName) {
-        Room room = roomRepository.findByName(roomName)
-                .orElseThrow(() -> new RoomNotFoundException(roomName));
-
-        roomRepository.deleteById(room.getId());
-
-        return ResponseEntity.accepted().build();
-    }
 
     @PostMapping
     @PreAuthorize("hasRole('Professor')")
-    public ResponseEntity<?> createRoom(@RequestBody @Valid CreateRoomRequest createRoomRequest , Errors errors) {
+    public ResponseEntity<?> createRoom(
+            @RequestBody @Valid CreateRoomRequest createRoomRequest ,
+            Errors errors,  @AuthenticationPrincipal AppUser userDetails) {
         if(errors.hasErrors()){
             return ResponseEntity.badRequest().build();
         }
@@ -98,8 +89,6 @@ RoomController {
                     .body("Room with name " + createRoomRequest.getName() + " already exists.");
         }
 
-        AppUser broadcaster = appUserRepository.findById(createRoomRequest.getBroadcasterId())
-                .orElseThrow(() -> new EntityNotFoundException());
 
         Room room = new Room(
                 null,
@@ -108,12 +97,10 @@ RoomController {
                 createRoomRequest.getCourse(),
                 createRoomRequest.getProfessorClass(),
                 createRoomRequest.getTime(),
-                broadcaster
+                userDetails
         );
 
-        if (!roomLiveKit.CreateRoom(room)) {
-            return ResponseEntity.internalServerError().build();
-        }
+        roomLiveKit.CreateRoom(room);
 
         roomRepository.save(room);
 
@@ -124,15 +111,22 @@ RoomController {
 
     @PatchMapping("/{roomName}")
     @PreAuthorize("hasRole('Professor')")
-    public ResponseEntity<?> updateRoom(@RequestBody @Valid CreateRoomRequest createRoomRequest , Errors errors , @PathVariable String roomName) {
+    public ResponseEntity<?> updateRoom(@RequestBody @Valid CreateRoomRequest createRoomRequest ,
+                                        Errors errors , @PathVariable String roomName,
+                                        @AuthenticationPrincipal AppUser userDetails) {
         Room room = roomRepository.findByName(roomName)
                 .orElseThrow(() -> new RoomNotFoundException(roomName));
+        if(room.getBroadcaster().getId() != userDetails.getId()){
+            throw new AccessDeniedException("update" + roomName);
+        }
         if(errors.hasErrors()){
             return ResponseEntity.badRequest().build();
         }
-        if(roomRepository.existsByName(createRoomRequest.getName())){
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Room with name " + createRoomRequest.getName() + " already exists.");
+        var bool = createRoomRequest.getTime().equals(room.getTime());
+        if(roomRepository.existsByName(createRoomRequest.getName())
+            && createRoomRequest.getTime().isEqual(room.getTime())){
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Nothing change");
         }
 
         room.setName(createRoomRequest.getName());
@@ -141,28 +135,39 @@ RoomController {
         room.setProfessorClass(createRoomRequest.getProfessorClass());
         room.setTime(createRoomRequest.getTime());
 
-        if (!roomLiveKit.UpdateRoom(room)) {
-            return ResponseEntity.internalServerError().build();
-        }
-
+        roomLiveKit.UpdateRoom(room);
         roomRepository.save(room);
 
-        URI location = linkTo(RoomController.class).slash(room.getName()).toUri();
+        //URI location = linkTo(RoomController.class).slash(room.getName()).toUri();
 
-        return ResponseEntity.created(location).body("Room updated successfully");
+        return ResponseEntity.ok().body("Room updated successfully");
+    }
+
+    @DeleteMapping("/{roomName}")
+    @PreAuthorize("hasRole('Professor')")
+    ResponseEntity<?> deleteByName(@PathVariable String roomName, @AuthenticationPrincipal AppUser userDetails) {
+        Room room = roomRepository.findByName(roomName)
+                .orElseThrow(() -> new RoomNotFoundException(roomName));
+        if(room.getBroadcaster().getId() != userDetails.getId()){
+            throw new AccessDeniedException("delete" + roomName);
+        }
+
+        roomRepository.deleteById(room.getId());
+
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{roomName}/token")
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
-    public ResponseEntity<?> getRoomToken(@PathVariable String roomName ,@RequestParam Long userId) {
+    public ResponseEntity<?> getRoomToken(@PathVariable String roomName,
+        @AuthenticationPrincipal AppUser userDetails) {
         Room room = roomRepository.findByName(roomName)
                 .orElseThrow(() -> new RoomNotFoundException(roomName));
-        AppUser user = appUserRepository.findById(userId).get();
-        accessToken.setName(user.getName());
-        accessToken.setIdentity(user.getUsername());
-        accessToken.setNotBefore(room.getTime());
+
+        accessToken.setName(userDetails.getName());
+        accessToken.setIdentity(userDetails.getUsername());
         accessToken.setTtl(2*60);
-        if (user.getRole().getName().equals("Professor")){
+        if (userDetails.getRole().getName().equals("Professor")){
             accessToken.addGrants(new RoomJoin(true), new RoomAdmin(true),  new RoomName(roomName) , new CanPublish(true) ,new CanPublishData(true));
         }
         else{
@@ -191,12 +196,12 @@ RoomController {
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/canPublish")
     @PreAuthorize("hasRole('Professor')")
-    public ResponseEntity<?> givePublishPermission(@PathVariable String roomName ,
+    public ResponseEntity<?> changePublishPermission(@PathVariable String roomName ,
                                                    @PathVariable String participantIdentity , @RequestBody boolean canPublish){
         if (!roomRepository.existsByName(roomName)) {
             throw new RoomNotFoundException(roomName);
         }
-        boolean result = roomLiveKit.givePublishPermission(roomName,participantIdentity,canPublish);
+        boolean result = roomLiveKit.changePublishPermission(roomName,participantIdentity,canPublish);
         return ResponseEntity.ok(result);
     }
 
@@ -210,6 +215,7 @@ RoomController {
         boolean result = roomLiveKit.muteParticipant(roomName,participantIdentity,mute);
         return ResponseEntity.ok(result);
     }
+
     @PostMapping("/{roomName}/participants/{participantIdentity}/expel")
     @PreAuthorize("hasRole('Professor')")
     public ResponseEntity<?> expelParticipant(@PathVariable String roomName ,

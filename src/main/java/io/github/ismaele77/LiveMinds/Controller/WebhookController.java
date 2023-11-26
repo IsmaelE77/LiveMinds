@@ -1,5 +1,6 @@
 package io.github.ismaele77.LiveMinds.Controller;
 
+import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundException;
 import io.github.ismaele77.LiveMinds.Repository.RoomRepository;
 import io.livekit.server.WebhookReceiver;
 import livekit.LivekitModels;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/webhook-endpoint")
-@CrossOrigin(origins="*")
 public class WebhookController {
 
     private final WebhookReceiver webhookReceiver;
@@ -31,10 +31,14 @@ public class WebhookController {
             logger.info("Received webhook event: {}", event.getEvent());
             logger.info("the room : "+room.getName()+" started");
         } else if(event.getEvent().equals("room_finished")){
-            LivekitModels.Room room = event.getRoom();
+            LivekitModels.Room liveKitRoom = event.getRoom();
             logger.info("Received webhook event: {}", event.getEvent());
+            var room = roomRepository.findByName(liveKitRoom.getName())
+                    .orElseThrow(() -> new RoomNotFoundException(liveKitRoom.getName()));
             roomRepository.deleteByName(room.getName());
             logger.info("the room : "+room.getName()+" deleted");
+        }else if(event.getEvent().equals("participant_joined") || event.getEvent().equals("participant_left")){
+            logger.info("Received webhook event: {}", event.getEvent());
         }
     }
 }

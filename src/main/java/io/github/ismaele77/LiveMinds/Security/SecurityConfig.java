@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -37,10 +38,8 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(AppUserRepository userRepo) {
-        return username -> {
-            return userRepo.findByUserName(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Username " + username + " not found"));
-        };
+        return username -> userRepo.findByUserName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Username " + username + " not found"));
     }
 
     @Bean
@@ -86,9 +85,7 @@ public class SecurityConfig {
             .securityContext((context) -> context
                     .securityContextRepository(repo)
             )
-            .csrf(httpSecurityCsrfConfigurer -> {
-                httpSecurityCsrfConfigurer.disable();
-            })
+            .csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults());
 
         http.sessionManagement( session -> session
