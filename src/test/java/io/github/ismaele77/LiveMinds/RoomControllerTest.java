@@ -3,6 +3,7 @@ package io.github.ismaele77.LiveMinds;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ismaele77.LiveMinds.Controller.RoomController;
 import io.github.ismaele77.LiveMinds.DTO.CreateRoomRequest;
+import io.github.ismaele77.LiveMinds.Enum.RoomStatus;
 import io.github.ismaele77.LiveMinds.Model.AppUser;
 import io.github.ismaele77.LiveMinds.Model.Role;
 import io.github.ismaele77.LiveMinds.Model.Room;
@@ -68,8 +69,8 @@ public class RoomControllerTest {
         adminRole = new Role(1L,"Professor");
         admin1 = new AppUser(1L,"Ahmed_190735","Ahmed","ahmed@gmail.com","password", adminRole,null);
         admin2 = new AppUser(2L,"Samer_190734","Samer","samer@gmail.com","password", adminRole,null);
-        room1 = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1", LocalDateTime.of(2023, 11, 26, 12, 30), admin1);
-        room2 = new Room(2,"BNA401_ITE_c1","ITE","BNA401","c1",LocalDateTime.of(2023, 11, 26, 12, 30), admin2);
+        room1 = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1", LocalDateTime.of(2023, 11, 26, 12, 30),RoomStatus.NOT_STARTED.getValue(), admin1);
+        room2 = new Room(2,"BNA401_ITE_c1","ITE","BNA401","c1",LocalDateTime.of(2023, 11, 26, 12, 30),RoomStatus.NOT_STARTED.getValue(), admin2);
         createRoomRequest = new CreateRoomRequest("ITE","BNA","C2", LocalDateTime.of(2023, 11, 12, 12, 30));
     }
     @Test
@@ -169,7 +170,7 @@ public class RoomControllerTest {
     @WithMockUser(roles = "Professor")
     public void testUpdateRoomWithNotChange() throws Exception {
         LocalDateTime specificDateTime = LocalDateTime.of(2023, 11, 26, 12, 30);
-        Room room = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1",specificDateTime, admin1);
+        Room room = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1",specificDateTime, RoomStatus.NOT_STARTED.getValue() ,admin1);
         CreateRoomRequest createRoomRequest = new CreateRoomRequest("ITE","BNA401","c1",specificDateTime);
         Mockito.when(roomRepository.existsByName(createRoomRequest.getName())).thenReturn(true);
         Mockito.when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room));

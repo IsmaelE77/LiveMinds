@@ -34,6 +34,9 @@ public class Room extends RepresentationModel<Room>{
     @NotNull
     private LocalDateTime time;
 
+    @NotBlank
+    private String status;
+
     @NotNull
     @ManyToOne
     @JoinColumn(name="broadcaster_id")

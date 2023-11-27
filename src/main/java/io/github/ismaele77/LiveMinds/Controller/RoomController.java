@@ -3,6 +3,7 @@ package io.github.ismaele77.LiveMinds.Controller;
 import io.github.ismaele77.LiveMinds.DTO.CreateRoomRequest;
 import io.github.ismaele77.LiveMinds.DTO.ParticipantDto;
 import io.github.ismaele77.LiveMinds.DTO.RoomDto;
+import io.github.ismaele77.LiveMinds.Enum.RoomStatus;
 import io.github.ismaele77.LiveMinds.Exception.AccessDeniedException;
 import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundException;
 import io.github.ismaele77.LiveMinds.Model.AppUser;
@@ -97,6 +98,7 @@ RoomController {
                 createRoomRequest.getCourse(),
                 createRoomRequest.getProfessorClass(),
                 createRoomRequest.getTime(),
+                RoomStatus.NOT_STARTED.getValue(),
                 userDetails
         );
 

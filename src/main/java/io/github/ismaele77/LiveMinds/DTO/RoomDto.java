@@ -13,6 +13,7 @@ public class RoomDto extends RepresentationModel<RoomDto> {
     private String course;
     private String professorClass;
     private LocalDateTime time;
+    private String status;
     private String broadcasterName;
 
     public RoomDto(){
@@ -26,6 +27,7 @@ public class RoomDto extends RepresentationModel<RoomDto> {
         this.course = room.getCourse();
         this.professorClass = room.getProfessorClass();
         this.time = room.getTime();
+        this.status = room.getStatus();
         this.broadcasterName = room.getBroadcaster().getName();
     }
 }
