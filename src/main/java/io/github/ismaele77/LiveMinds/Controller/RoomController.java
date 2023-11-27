@@ -1,9 +1,6 @@
 package io.github.ismaele77.LiveMinds.Controller;
 
-import io.github.ismaele77.LiveMinds.DTO.CreateRoomRequest;
-import io.github.ismaele77.LiveMinds.DTO.ParticipantDto;
-import io.github.ismaele77.LiveMinds.DTO.RoomDto;
-import io.github.ismaele77.LiveMinds.DTO.TokenResponse;
+import io.github.ismaele77.LiveMinds.DTO.*;
 import io.github.ismaele77.LiveMinds.Enum.RoomStatus;
 import io.github.ismaele77.LiveMinds.Exception.AccessDeniedException;
 import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundException;
@@ -123,13 +120,14 @@ RoomController {
             throw new AccessDeniedException("update" + roomName);
         }
         if(errors.hasErrors()){
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message","Invalid input data"));
         }
         var bool = createRoomRequest.getTime().equals(room.getTime());
         if(roomRepository.existsByName(createRoomRequest.getName())
             && createRoomRequest.getTime().isEqual(room.getTime())){
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("Nothing change");
+                    .body(Map.of("message","Nothing change"));
         }
 
         room.setName(createRoomRequest.getName());
@@ -157,7 +155,7 @@ RoomController {
 
         roomRepository.deleteById(room.getId());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(Map.of("message","Room deleted successfully"));
     }
 
     @GetMapping("/{roomName}/token")
@@ -206,10 +204,15 @@ RoomController {
     public ResponseEntity<?> changePublishPermission
             (@PathVariable String roomName ,
             @PathVariable String participantIdentity ,
-            @RequestBody boolean canPublish,
+            @RequestBody @Valid canPublishRequest req,
+            Errors errors,
             @AuthenticationPrincipal AppUser userDetails){
+        if(errors.hasErrors()){
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message","Invalid input data"));
+        }
         checkIfItHasRoom(roomName,userDetails,"change publish permission for participant");
-        boolean result = roomLiveKit.changePublishPermission(roomName,participantIdentity,canPublish);
+        boolean result = roomLiveKit.changePublishPermission(roomName,participantIdentity,req.isCanPublish());
         return ResponseEntity.ok(Map.of("result",result));
     }
 
@@ -218,10 +221,15 @@ RoomController {
     public ResponseEntity<?> muteParticipant
             (@PathVariable String roomName ,
             @PathVariable String participantIdentity ,
-            @RequestBody boolean mute,
+            @RequestBody @Valid muteRequest req,
+            Errors errors,
             @AuthenticationPrincipal AppUser userDetails){
+        if(errors.hasErrors()){
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message","Invalid input data"));
+        }
         checkIfItHasRoom(roomName,userDetails,"mute participant");
-        boolean result = roomLiveKit.muteParticipant(roomName,participantIdentity,mute);
+        boolean result = roomLiveKit.muteParticipant(roomName,participantIdentity,req.isMute());
         return ResponseEntity.ok(Map.of("result",result));
     }
 

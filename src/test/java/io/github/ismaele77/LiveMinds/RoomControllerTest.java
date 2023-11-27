@@ -191,7 +191,9 @@ public class RoomControllerTest {
                         .with(user(admin1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRoomRequest)))
-                .andExpect(content().string("Nothing change"))
+                .andExpect(content().json("{\n" +
+                        "  \"message\": \"Nothing change\"\n" +
+                        "}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
@@ -201,6 +203,9 @@ public class RoomControllerTest {
         Mockito.when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room1));
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/rooms/{roomName}", roomName)
                         .with(user(admin1)))
+                .andExpect(content().json("{\n" +
+                        "  \"message\": \"Room deleted successfully\"\n" +
+                        "}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 

@@ -41,7 +41,8 @@ public class AccountController {
     @PostMapping("/login")
     public ResponseEntity<?> performLogin(@RequestBody @Valid LoginDto loginRequest, Errors errors, HttpServletRequest request, HttpServletResponse response) {
         if(errors.hasErrors()){
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message","Invalid input data."));
         }
         try {
             // Perform authentication
