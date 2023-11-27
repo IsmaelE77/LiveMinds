@@ -254,35 +254,38 @@ public class RoomControllerTest {
     @Test
     @WithMockUser(roles = "Professor")
     public void changePublishPermissionTest() throws Exception{
-        Mockito.when(roomRepository.existsByName(roomName)).thenReturn(true);
+        Mockito.when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room1));
 
         mockMvc.perform( MockMvcRequestBuilders
                     .post("/api/v1/rooms/{roomName}/participants/{participantIdentity}/canPublish", roomName, "participant123")
                     .contentType(HAL_JSON)
-                    .content("true"))
+                    .content("true")
+                    .with(user(admin1)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     @WithMockUser(roles = "Professor")
     public void muteParticipantTest() throws Exception{
-        Mockito.when(roomRepository.existsByName(roomName)).thenReturn(true);
+        Mockito.when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room1));
 
         mockMvc.perform( MockMvcRequestBuilders
                         .post("/api/v1/rooms/{roomName}/participants/{participantIdentity}/mute", roomName, "participant123")
                         .contentType(HAL_JSON)
-                        .content("true"))
+                        .content("true")
+                        .with(user(admin1)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     @WithMockUser(roles = "Professor")
     public void expelParticipantTest() throws Exception{
-        Mockito.when(roomRepository.existsByName(roomName)).thenReturn(true);
+        Mockito.when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room1));
 
         mockMvc.perform( MockMvcRequestBuilders
                         .post("/api/v1/rooms/{roomName}/participants/{participantIdentity}/expel", roomName, "participant123")
-                        .contentType(HAL_JSON))
+                        .contentType(HAL_JSON)
+                        .with(user(admin1)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 

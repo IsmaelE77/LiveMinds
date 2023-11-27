@@ -40,6 +40,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 public class
 RoomController {
 
+    private static final int TOKEN_TIME_OUT = 2*60;
     private final RoomRepository roomRepository;
     private final AppUserRepository appUserRepository;
     private final RoomLiveKitService roomLiveKit;
@@ -171,8 +172,8 @@ RoomController {
         }
         accessToken.setName(userDetails.getName());
         accessToken.setIdentity(userDetails.getUsername());
-        accessToken.setTtl(2*60);
-        if (userDetails.getRole().getName().equals("Professor")){
+        accessToken.setTtl(TOKEN_TIME_OUT);
+        if (room.getBroadcaster().getId() == userDetails.getId()){
             accessToken.addGrants(new RoomJoin(true), new RoomAdmin(true),  new RoomName(roomName) , new CanPublish(true) ,new CanPublishData(true));
         }
         else{
@@ -201,36 +202,46 @@ RoomController {
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/canPublish")
     @PreAuthorize("hasRole('Professor')")
-    public ResponseEntity<?> changePublishPermission(@PathVariable String roomName ,
-                                                   @PathVariable String participantIdentity , @RequestBody boolean canPublish){
-        if (!roomRepository.existsByName(roomName)) {
-            throw new RoomNotFoundException(roomName);
-        }
+    public ResponseEntity<?> changePublishPermission
+            (@PathVariable String roomName ,
+            @PathVariable String participantIdentity ,
+            @RequestBody boolean canPublish,
+            @AuthenticationPrincipal AppUser userDetails){
+        checkIfItHasRoom(roomName,userDetails,"change publish permission for participant");
         boolean result = roomLiveKit.changePublishPermission(roomName,participantIdentity,canPublish);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/mute")
     @PreAuthorize("hasRole('Professor')")
-    public ResponseEntity<?> muteParticipant(@PathVariable String roomName ,
-                                                   @PathVariable String participantIdentity , @RequestBody boolean mute){
-        if (!roomRepository.existsByName(roomName)) {
-            throw new RoomNotFoundException(roomName);
-        }
+    public ResponseEntity<?> muteParticipant
+            (@PathVariable String roomName ,
+            @PathVariable String participantIdentity ,
+            @RequestBody boolean mute,
+            @AuthenticationPrincipal AppUser userDetails){
+        checkIfItHasRoom(roomName,userDetails,"mute participant");
         boolean result = roomLiveKit.muteParticipant(roomName,participantIdentity,mute);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/expel")
     @PreAuthorize("hasRole('Professor')")
-    public ResponseEntity<?> expelParticipant(@PathVariable String roomName ,
-                                             @PathVariable String participantIdentity){
-        if (!roomRepository.existsByName(roomName)) {
-            throw new RoomNotFoundException(roomName);
-        }
+    public ResponseEntity<?> expelParticipant
+            (@PathVariable String roomName ,
+             @PathVariable String participantIdentity,
+             @AuthenticationPrincipal AppUser userDetails){
+        checkIfItHasRoom(roomName,userDetails,"expel participant");
         boolean result = roomLiveKit.expelParticipant(roomName,participantIdentity);
         roomService.banUser(roomName,participantIdentity);
         return ResponseEntity.ok(result);
+    }
+
+    private void checkIfItHasRoom(String roomName , AppUser user , String command){
+        Room room = roomRepository.findByName(roomName)
+                .orElseThrow(() -> new RoomNotFoundException(roomName));
+        if (room.getBroadcaster().getId() != user.getId()){
+            throw new AccessDeniedException(command);
+        }
     }
 
 }

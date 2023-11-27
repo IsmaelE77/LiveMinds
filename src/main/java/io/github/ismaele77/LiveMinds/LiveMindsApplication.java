@@ -52,9 +52,8 @@ public class LiveMindsApplication {
 	@Bean
 	public CommandLineRunner demo(AppUserRepository userRepository , PasswordEncoder encoder) {
 		return (args) -> {
-//			AppUser user = userRepository.findById(2L).get();
-//			user.setPassword(encoder.encode("admin"));
-//			user.setRole(new Role(3L,"Professor"));
+//			AppUser user = userRepository.findById(4L).get();
+//			user.setPassword(encoder.encode("123"));
 //			userRepository.save(user);
 //			AppUser user2 = userRepository.findById(3L).get();
 //			user2.setPassword(encoder.encode("2134990"));

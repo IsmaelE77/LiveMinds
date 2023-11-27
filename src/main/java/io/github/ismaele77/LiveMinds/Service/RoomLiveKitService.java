@@ -63,7 +63,7 @@ public class RoomLiveKitService {
     public boolean changePublishPermission(String roomName , String participantIdentity ,boolean canPublish){
         try {
             LivekitModels.ParticipantInfo participant = roomServiceClient.getParticipant(roomName,participantIdentity).execute().body();
-            var per = LivekitModels.ParticipantPermission.newBuilder()
+            LivekitModels.ParticipantPermission.newBuilder()
                     .setCanPublish(false).build();
             var response = roomServiceClient.updateParticipant(roomName,participant.getIdentity() , participant.getName(),
                     participant.getMetadata() , LivekitModels.ParticipantPermission.newBuilder()
