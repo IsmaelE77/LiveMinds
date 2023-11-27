@@ -121,7 +121,7 @@ RoomController {
         }
         if(errors.hasErrors()){
             return ResponseEntity.badRequest()
-                    .body(Map.of("message","Invalid input data"));
+                    .body(Map.of("error","Invalid input data"));
         }
         var bool = createRoomRequest.getTime().equals(room.getTime());
         if(roomRepository.existsByName(createRoomRequest.getName())
@@ -242,7 +242,7 @@ RoomController {
         checkIfItHasRoom(roomName,userDetails,"expel participant");
         roomLiveKit.expelParticipant(roomName,participantIdentity);
         roomService.banUser(roomName,participantIdentity);
-        return ResponseEntity.ok(Map.of("message","Participant was expeled"));
+        return ResponseEntity.ok(Map.of("message","Participant was expelled"));
     }
 
     private void checkIfItHasRoom(String roomName , AppUser user , String command){
