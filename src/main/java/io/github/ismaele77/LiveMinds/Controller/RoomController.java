@@ -6,14 +6,17 @@ import io.github.ismaele77.LiveMinds.DTO.RoomDto;
 import io.github.ismaele77.LiveMinds.Enum.RoomStatus;
 import io.github.ismaele77.LiveMinds.Exception.AccessDeniedException;
 import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundException;
+import io.github.ismaele77.LiveMinds.Exception.UserNotFoundException;
 import io.github.ismaele77.LiveMinds.Model.AppUser;
 import io.github.ismaele77.LiveMinds.Repository.AppUserRepository;
 import io.github.ismaele77.LiveMinds.Repository.RoomRepository;
 import io.github.ismaele77.LiveMinds.Model.Room;
 import io.github.ismaele77.LiveMinds.Service.RoomLiveKitService;
+import io.github.ismaele77.LiveMinds.Service.RoomService;
 import io.livekit.server.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -26,12 +29,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/v1/rooms")
+@RequiredArgsConstructor
 public class
 RoomController {
 
@@ -39,13 +44,7 @@ RoomController {
     private final AppUserRepository appUserRepository;
     private final RoomLiveKitService roomLiveKit;
     private final AccessToken accessToken;
-
-    public RoomController(RoomRepository roomRepository, AppUserRepository appUserRepository, RoomLiveKitService roomLiveKit, AccessToken accessToken) {
-        this.roomRepository = roomRepository;
-        this.appUserRepository = appUserRepository;
-        this.roomLiveKit = roomLiveKit;
-        this.accessToken = accessToken;
-    }
+    private final RoomService roomService;
 
     @GetMapping
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
@@ -99,7 +98,8 @@ RoomController {
                 createRoomRequest.getProfessorClass(),
                 createRoomRequest.getTime(),
                 RoomStatus.NOT_STARTED.getValue(),
-                userDetails
+                userDetails,
+                Collections.emptyList()
         );
 
         roomLiveKit.CreateRoom(room);
@@ -166,6 +166,9 @@ RoomController {
         Room room = roomRepository.findByName(roomName)
                 .orElseThrow(() -> new RoomNotFoundException(roomName));
 
+        if(room.getBannedUsers().contains(userDetails)){
+            throw new AccessDeniedException("get token");
+        }
         accessToken.setName(userDetails.getName());
         accessToken.setIdentity(userDetails.getUsername());
         accessToken.setTtl(2*60);
@@ -226,6 +229,7 @@ RoomController {
             throw new RoomNotFoundException(roomName);
         }
         boolean result = roomLiveKit.expelParticipant(roomName,participantIdentity);
+        roomService.banUser(roomName,participantIdentity);
         return ResponseEntity.ok(result);
     }
 

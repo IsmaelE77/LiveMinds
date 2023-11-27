@@ -10,6 +10,7 @@ import io.github.ismaele77.LiveMinds.Model.Room;
 import io.github.ismaele77.LiveMinds.Repository.AppUserRepository;
 import io.github.ismaele77.LiveMinds.Repository.RoomRepository;
 import io.github.ismaele77.LiveMinds.Service.RoomLiveKitService;
+import io.github.ismaele77.LiveMinds.Service.RoomService;
 import io.livekit.server.AccessToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -55,6 +57,9 @@ public class RoomControllerTest {
     @MockBean
     AccessToken accessToken;
 
+    @MockBean
+    RoomService roomService;
+
     private String roomName;
     private Role adminRole;
     private AppUser admin1;
@@ -69,8 +74,8 @@ public class RoomControllerTest {
         adminRole = new Role(1L,"Professor");
         admin1 = new AppUser(1L,"Ahmed_190735","Ahmed","ahmed@gmail.com","password", adminRole,null);
         admin2 = new AppUser(2L,"Samer_190734","Samer","samer@gmail.com","password", adminRole,null);
-        room1 = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1", LocalDateTime.of(2023, 11, 26, 12, 30),RoomStatus.NOT_STARTED.getValue(), admin1);
-        room2 = new Room(2,"BNA401_ITE_c1","ITE","BNA401","c1",LocalDateTime.of(2023, 11, 26, 12, 30),RoomStatus.NOT_STARTED.getValue(), admin2);
+        room1 = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1", LocalDateTime.of(2023, 11, 26, 12, 30),RoomStatus.NOT_STARTED.getValue(), admin1 ,Collections.emptyList());
+        room2 = new Room(2,"BNA401_ITE_c1","ITE","BNA401","c1",LocalDateTime.of(2023, 11, 26, 12, 30),RoomStatus.NOT_STARTED.getValue(), admin2,Collections.emptyList());
         createRoomRequest = new CreateRoomRequest("ITE","BNA","C2", LocalDateTime.of(2023, 11, 12, 12, 30));
     }
     @Test
@@ -170,7 +175,7 @@ public class RoomControllerTest {
     @WithMockUser(roles = "Professor")
     public void testUpdateRoomWithNotChange() throws Exception {
         LocalDateTime specificDateTime = LocalDateTime.of(2023, 11, 26, 12, 30);
-        Room room = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1",specificDateTime, RoomStatus.NOT_STARTED.getValue() ,admin1);
+        Room room = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1",specificDateTime, RoomStatus.NOT_STARTED.getValue() ,admin1 ,Collections.emptyList());
         CreateRoomRequest createRoomRequest = new CreateRoomRequest("ITE","BNA401","c1",specificDateTime);
         Mockito.when(roomRepository.existsByName(createRoomRequest.getName())).thenReturn(true);
         Mockito.when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room));
@@ -222,6 +227,17 @@ public class RoomControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/rooms/{roomName}/token", roomName)
                         .with(user(admin1)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "Student")
+    public void testGetTokenForBannedUser() throws Exception {
+        var admin = new AppUser(2L,"Samer_190734","Samer","samer@gmail.com","password", adminRole,null);
+        var room = new Room(1,"BNA401_ITE_c1","ITE","BNA401","c1", LocalDateTime.of(2023, 11, 26, 12, 30),RoomStatus.NOT_STARTED.getValue(), admin1 , List.of(admin));
+        Mockito.when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/rooms/{roomName}/token", roomName)
+                        .with(user(admin)))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
