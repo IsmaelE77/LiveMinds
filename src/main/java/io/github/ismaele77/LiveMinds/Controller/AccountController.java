@@ -42,7 +42,7 @@ public class AccountController {
     public ResponseEntity<?> performLogin(@RequestBody @Valid LoginDto loginRequest, Errors errors, HttpServletRequest request, HttpServletResponse response) {
         if(errors.hasErrors()){
             return ResponseEntity.badRequest()
-                    .body(Map.of("message","Invalid input data."));
+                    .body(Map.of("error","Invalid input data."));
         }
         try {
             // Perform authentication
@@ -62,11 +62,7 @@ public class AccountController {
         } catch (AuthenticationException e) {
             // Handle authentication failure
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Authentication failed", "status", "error"));
-        } catch (ValidationException e) {
-            // Handle validation failure
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", e.getMessage(), "status", "error"));
+                    .body(Map.of("error", "Authentication failed", "status", "error"));
         }
     }
 
@@ -82,7 +78,7 @@ public class AccountController {
             // Log the exception and return an appropriate response
             log.error("Logout failed: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Logout failed", "status", "error"));
+                    .body(Map.of("error", "Logout failed", "status", "error"));
         }
     }
 

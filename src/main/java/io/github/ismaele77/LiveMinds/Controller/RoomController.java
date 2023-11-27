@@ -209,7 +209,7 @@ RoomController {
             @AuthenticationPrincipal AppUser userDetails){
         if(errors.hasErrors()){
             return ResponseEntity.badRequest()
-                    .body(Map.of("message","Invalid input data"));
+                    .body(Map.of("error","Invalid input data"));
         }
         checkIfItHasRoom(roomName,userDetails,"change publish permission for participant");
         roomLiveKit.changePublishPermission(roomName,participantIdentity,req.isCanPublish());
@@ -226,7 +226,7 @@ RoomController {
             @AuthenticationPrincipal AppUser userDetails){
         if(errors.hasErrors()){
             return ResponseEntity.badRequest()
-                    .body(Map.of("message","Invalid input data"));
+                    .body(Map.of("error","Invalid input data"));
         }
         checkIfItHasRoom(roomName,userDetails,"mute participant");
         roomLiveKit.muteParticipant(roomName,participantIdentity,req.isMute());
