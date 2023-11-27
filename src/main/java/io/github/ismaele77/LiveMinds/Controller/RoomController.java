@@ -212,8 +212,8 @@ RoomController {
                     .body(Map.of("message","Invalid input data"));
         }
         checkIfItHasRoom(roomName,userDetails,"change publish permission for participant");
-        boolean result = roomLiveKit.changePublishPermission(roomName,participantIdentity,req.isCanPublish());
-        return ResponseEntity.ok(Map.of("result",result));
+        roomLiveKit.changePublishPermission(roomName,participantIdentity,req.isCanPublish());
+        return ResponseEntity.ok(Map.of("message","Participant permission changed"));
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/mute")
@@ -229,8 +229,8 @@ RoomController {
                     .body(Map.of("message","Invalid input data"));
         }
         checkIfItHasRoom(roomName,userDetails,"mute participant");
-        boolean result = roomLiveKit.muteParticipant(roomName,participantIdentity,req.isMute());
-        return ResponseEntity.ok(Map.of("result",result));
+        roomLiveKit.muteParticipant(roomName,participantIdentity,req.isMute());
+        return ResponseEntity.ok(Map.of("message","Participant was muted"));
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/expel")
@@ -240,9 +240,9 @@ RoomController {
              @PathVariable String participantIdentity,
              @AuthenticationPrincipal AppUser userDetails){
         checkIfItHasRoom(roomName,userDetails,"expel participant");
-        boolean result = roomLiveKit.expelParticipant(roomName,participantIdentity);
+        roomLiveKit.expelParticipant(roomName,participantIdentity);
         roomService.banUser(roomName,participantIdentity);
-        return ResponseEntity.ok(Map.of("result",result));
+        return ResponseEntity.ok(Map.of("message","Participant was expeled"));
     }
 
     private void checkIfItHasRoom(String roomName , AppUser user , String command){

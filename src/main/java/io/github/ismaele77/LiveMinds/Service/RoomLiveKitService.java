@@ -60,7 +60,7 @@ public class RoomLiveKitService {
         }
     }
 
-    public boolean changePublishPermission(String roomName , String participantIdentity ,boolean canPublish){
+    public void changePublishPermission(String roomName , String participantIdentity ,boolean canPublish){
         try {
             LivekitModels.ParticipantInfo participant = roomServiceClient.getParticipant(roomName,participantIdentity).execute().body();
             LivekitModels.ParticipantPermission.newBuilder()
@@ -68,30 +68,27 @@ public class RoomLiveKitService {
             var response = roomServiceClient.updateParticipant(roomName,participant.getIdentity() , participant.getName(),
                     participant.getMetadata() , LivekitModels.ParticipantPermission.newBuilder()
                             .setCanPublish(canPublish).build()).execute().body();
-            return response.isInitialized();
         } catch (IOException | NullPointerException e) {
             logger.error("Error change publish permission", e);
             throw new LiveKitException("Change publish permission");
         }
     }
 
-    public boolean muteParticipant(String roomName , String participantIdentity , boolean mute){
+    public void muteParticipant(String roomName , String participantIdentity , boolean mute){
         try {
             LivekitModels.ParticipantInfo participant = roomServiceClient.getParticipant(roomName,participantIdentity).execute().body();
             for (var trackInfo : participant.getTracksList())
                     if(trackInfo.getType() == LivekitModels.TrackType.AUDIO)
                         roomServiceClient.mutePublishedTrack(roomName,participantIdentity ,trackInfo.getSid(),mute).execute().body();
-            return true;
         } catch (IOException | NullPointerException e) {
             logger.error("Error mute participant", e);
             throw new LiveKitException("Mute participant");
         }
     }
 
-    public boolean expelParticipant(String roomName , String participantIdentity){
+    public void expelParticipant(String roomName , String participantIdentity){
         try {
             roomServiceClient.removeParticipant(roomName,participantIdentity).execute().body();
-            return true;
         } catch (IOException e) {
             logger.error("Error expel participant", e);
             throw new LiveKitException("Expel participant");
