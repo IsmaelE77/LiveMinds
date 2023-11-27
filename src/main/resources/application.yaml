@@ -8,14 +8,13 @@ server:
         http-only: true
 
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/liveminds
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
+  config:
+    import: optional:secrets.yaml
   jpa:
     hibernate:
       ddl-auto: validate
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+

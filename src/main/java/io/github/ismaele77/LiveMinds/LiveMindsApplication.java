@@ -1,29 +1,25 @@
 package io.github.ismaele77.LiveMinds;
 
+import io.github.ismaele77.LiveMinds.Configuration.LiveKitConfigProperties;
 import io.github.ismaele77.LiveMinds.Model.AppUser;
-import io.github.ismaele77.LiveMinds.Model.Role;
 import io.github.ismaele77.LiveMinds.Repository.AppUserRepository;
 import io.livekit.server.*;
-import livekit.LivekitModels;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import retrofit2.Call;
 
 import java.io.IOException;
-import java.util.List;
 
 
 @ComponentScan
 @SpringBootApplication
+@EnableConfigurationProperties(LiveKitConfigProperties.class)
 public class LiveMindsApplication {
-
-	private final String HOST = "http://localhost:7880";
-	private final String APIKEY = "devkey";
-	private final String SECRET = "secret";
 
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(LiveMindsApplication.class, args);
@@ -42,21 +38,21 @@ public class LiveMindsApplication {
 	}
 
 	@Bean
-	public RoomServiceClient roomServiceClient() {
+	public RoomServiceClient roomServiceClient(LiveKitConfigProperties liveKit) {
 		return RoomServiceClient.create(
-				HOST,
-				APIKEY,
-				SECRET);
+				liveKit.host(),
+				liveKit.apiKey(),
+				liveKit.secret());
 	}
 
 	@Bean
-	public AccessToken token() {
-		return new AccessToken(APIKEY, SECRET);
+	public AccessToken token(LiveKitConfigProperties liveKit) {
+		return new AccessToken(liveKit.apiKey(),liveKit.secret());
 	}
 
 	@Bean
-	public WebhookReceiver webhookReceiver(){
-		return new WebhookReceiver(APIKEY,SECRET);
+	public WebhookReceiver webhookReceiver(LiveKitConfigProperties liveKit){
+		return new WebhookReceiver(liveKit.apiKey(),liveKit.secret());
 	}
 }
 
