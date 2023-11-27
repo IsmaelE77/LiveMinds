@@ -3,6 +3,7 @@ package io.github.ismaele77.LiveMinds.Controller;
 import io.github.ismaele77.LiveMinds.DTO.CreateRoomRequest;
 import io.github.ismaele77.LiveMinds.DTO.ParticipantDto;
 import io.github.ismaele77.LiveMinds.DTO.RoomDto;
+import io.github.ismaele77.LiveMinds.DTO.TokenResponse;
 import io.github.ismaele77.LiveMinds.Enum.RoomStatus;
 import io.github.ismaele77.LiveMinds.Exception.AccessDeniedException;
 import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundException;
@@ -31,6 +32,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
@@ -42,7 +44,6 @@ RoomController {
 
     private static final int TOKEN_TIME_OUT = 2*60;
     private final RoomRepository roomRepository;
-    private final AppUserRepository appUserRepository;
     private final RoomLiveKitService roomLiveKit;
     private final AccessToken accessToken;
     private final RoomService roomService;
@@ -86,10 +87,9 @@ RoomController {
             return ResponseEntity.badRequest().build();
         }
         if(roomRepository.existsByName(createRoomRequest.getName())){
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Room with name " + createRoomRequest.getName() + " already exists.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",
+                    "Room with name " + createRoomRequest.getName() + " already exists."));
         }
-
 
         Room room = new Room(
                 null,
@@ -109,7 +109,7 @@ RoomController {
 
         URI location = linkTo(RoomController.class).slash(room.getName()).toUri();
 
-        return ResponseEntity.created(location).body("Room created successfully");
+        return ResponseEntity.created(location).body(Map.of("message", "Room created successfully"));
     }
 
     @PatchMapping("/{roomName}")
@@ -143,7 +143,7 @@ RoomController {
 
         //URI location = linkTo(RoomController.class).slash(room.getName()).toUri();
 
-        return ResponseEntity.ok().body("Room updated successfully");
+        return ResponseEntity.ok().body(Map.of("message","Room updated successfully"));
     }
 
     @DeleteMapping("/{roomName}")
@@ -179,8 +179,9 @@ RoomController {
         else{
             accessToken.addGrants(new RoomJoin(true), new RoomName(roomName) , new CanPublish(false) , new CanPublishData(true));
         }
+        TokenResponse tokenResponse = new TokenResponse(accessToken.toJwt());
 
-        return ResponseEntity.ok(accessToken.toJwt());
+        return ResponseEntity.ok(tokenResponse);
     }
 
     @GetMapping("/{roomName}/participants")
@@ -209,7 +210,7 @@ RoomController {
             @AuthenticationPrincipal AppUser userDetails){
         checkIfItHasRoom(roomName,userDetails,"change publish permission for participant");
         boolean result = roomLiveKit.changePublishPermission(roomName,participantIdentity,canPublish);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(Map.of("result",result));
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/mute")
@@ -221,7 +222,7 @@ RoomController {
             @AuthenticationPrincipal AppUser userDetails){
         checkIfItHasRoom(roomName,userDetails,"mute participant");
         boolean result = roomLiveKit.muteParticipant(roomName,participantIdentity,mute);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(Map.of("result",result));
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/expel")
@@ -233,7 +234,7 @@ RoomController {
         checkIfItHasRoom(roomName,userDetails,"expel participant");
         boolean result = roomLiveKit.expelParticipant(roomName,participantIdentity);
         roomService.banUser(roomName,participantIdentity);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(Map.of("result",result));
     }
 
     private void checkIfItHasRoom(String roomName , AppUser user , String command){

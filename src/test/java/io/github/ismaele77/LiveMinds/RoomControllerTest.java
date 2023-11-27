@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -59,6 +60,9 @@ public class RoomControllerTest {
 
     @MockBean
     RoomService roomService;
+
+    @MockBean
+    CommandLineRunner commandLineRunner;
 
     private String roomName;
     private Role adminRole;
@@ -118,7 +122,9 @@ public class RoomControllerTest {
                         .with(user(admin1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRoomRequest)))
-                .andExpect(content().string("Room created successfully"))
+                .andExpect(content().json("{\n" +
+                        "  \"message\": \"Room created successfully\"\n" +
+                        "}"))
                 .andExpect(MockMvcResultMatchers.status().isCreated());
     }
 
@@ -143,7 +149,9 @@ public class RoomControllerTest {
                         .with(user(admin1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRoomRequest)))
-                .andExpect(content().string("Room updated successfully"))
+                .andExpect(content().json("{\n" +
+                        "  \"message\": \"Room updated successfully\"\n" +
+                        "}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 

@@ -1,5 +1,6 @@
 package io.github.ismaele77.LiveMinds.Exception.Advice;
 
+import io.github.ismaele77.LiveMinds.DTO.SecurityResponse;
 import io.github.ismaele77.LiveMinds.Exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +11,9 @@ public class UserNotFoundAdvice {
     @ResponseBody
     @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    String userNotFoundHandler(UserNotFoundException ex) {
-        return ex.getMessage();
+    SecurityResponse userNotFoundHandler(UserNotFoundException ex) {
+        SecurityResponse response = new SecurityResponse(ex.getMessage());
+        return response;
     }
 
 }

@@ -27,37 +27,17 @@ public class LiveMindsApplication {
 
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(LiveMindsApplication.class, args);
-//		RoomServiceClient roomServiceClient = RoomServiceClient.create(
-//				"http://localhost:7880",
-//				"devkey",
-//				"secret");
-//		var room = roomServiceClient.createRoom("TACO",10 * 60);
-//		var call = roomServiceClient.listRooms();
-//		try {
-//			//room.execute();
-//			var calls = call.execute().body();
-//			for (var c: calls) {
-//				System.out.println(c.getName());
-//			}
-//		} catch (IOException e) {
-//		}
-//		AccessToken accessToken = new AccessToken("devkey", "secret");
-//
-//		accessToken.setName("ismael");
-//		accessToken.setIdentity("123");
-//		accessToken.addGrants(new RoomJoin(true), new RoomAdmin(false),  new RoomName("TACO") , new CanPublish(true) ,new CanPublishData(true));
-//		System.out.println(accessToken.toJwt());
 	}
 
 	@Bean
 	public CommandLineRunner demo(AppUserRepository userRepository , PasswordEncoder encoder) {
 		return (args) -> {
-//			AppUser user = userRepository.findById(4L).get();
-//			user.setPassword(encoder.encode("123"));
-//			userRepository.save(user);
-//			AppUser user2 = userRepository.findById(3L).get();
-//			user2.setPassword(encoder.encode("2134990"));
-//			userRepository.save(user2);
+			AppUser user = userRepository.findByUserName("admin").get();
+			user.setPassword(encoder.encode("admin"));
+			userRepository.save(user);
+			AppUser user2 = userRepository.findByUserName("ismail_190735").get();
+			user2.setPassword(encoder.encode("2134990"));
+			userRepository.save(user2);
 		};
 	}
 

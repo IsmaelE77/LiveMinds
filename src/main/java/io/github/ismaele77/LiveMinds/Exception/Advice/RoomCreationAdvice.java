@@ -1,5 +1,6 @@
 package io.github.ismaele77.LiveMinds.Exception.Advice;
 
+import io.github.ismaele77.LiveMinds.DTO.SecurityResponse;
 import io.github.ismaele77.LiveMinds.Exception.RoomCreationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,9 @@ public class RoomCreationAdvice {
     @ResponseBody
     @ExceptionHandler(RoomCreationException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    String handleRoomCreationException(RoomCreationException ex) {
-        return ex.getMessage();
+    SecurityResponse handleRoomCreationException(RoomCreationException ex) {
+        SecurityResponse response = new SecurityResponse(ex.getMessage());
+        return response;
     }
 
 }
