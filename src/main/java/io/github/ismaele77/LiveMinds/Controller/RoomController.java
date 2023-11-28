@@ -184,7 +184,7 @@ RoomController {
 
     @GetMapping("/{roomName}/participants")
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
-    public ResponseEntity<?> getParticipants(@PathVariable String roomName){
+    public ResponseEntity<CollectionModel<ParticipantDto>> getParticipants(@PathVariable String roomName){
         if (!roomRepository.existsByName(roomName)) {
             throw new RoomNotFoundException(roomName);
         }
@@ -196,7 +196,9 @@ RoomController {
             user.setIdentity(participant.getIdentity());
             participantsInfo.add(user);
         }
-        return ResponseEntity.ok(participantsInfo);
+        Link link = linkTo(RoomController.class).withSelfRel();
+        CollectionModel<ParticipantDto> result = CollectionModel.of(participantsInfo, link);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/canPublish")
