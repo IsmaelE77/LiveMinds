@@ -28,12 +28,6 @@ public class LiveMindsApplication {
 	@Bean
 	public CommandLineRunner demo(AppUserRepository userRepository , PasswordEncoder encoder) {
 		return (args) -> {
-			AppUser user = userRepository.findByUserName("admin").get();
-			user.setPassword(encoder.encode("admin"));
-			userRepository.save(user);
-			AppUser user2 = userRepository.findByUserName("ismail_190735").get();
-			user2.setPassword(encoder.encode("2134990"));
-			userRepository.save(user2);
 		};
 	}
 
