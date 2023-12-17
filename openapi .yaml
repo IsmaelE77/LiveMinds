@@ -1,0 +1,433 @@
+openapi: 3.0.3
+info:
+  title: Swagger Petstore - OpenAPI 3.0
+  description: |-
+    Live Broadcasting Lecture API facilitates the management of virtual lecture rooms, enabling real-time communication, collaboration, and control for live lectures. This API empowers educational platforms to seamlessly integrate live broadcasting features, enhancing the online learning experience.
+    You can now help us improve the API whether it's by making changes to the definition itself or to the code.
+
+    Some useful links:
+    - [The app repository](https://github.com/swagger-api/swagger-petstore)
+    - [The source API definition for the Pet Store](https://github.com/swagger-api/swagger-petstore/blob/master/src/main/resources/openapi.yaml)
+  contact:
+    email: ismael.ka@protonmail.com
+  license:
+    name: Agpl 3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.en.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about liveKit server that used in this app
+  url: https://docs.livekit.io/
+servers:
+  - url: http://localhost:8080/api/v1
+tags:
+  - name: room
+    description: Everything about Rooms
+    externalDocs:
+      description: Find out more
+      url: https://docs.livekit.io/realtime/client/connect/
+  - name: Account
+    description: Everything about account
+
+
+paths:
+  /api/v1/rooms:
+    get:
+      tags:
+        - room
+      summary: List Rooms
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+        '404':
+          description: there are no rooms currently.
+          content:
+            application/json:
+              example:
+                error: "Room not found."
+        '500':
+          description: Internal Server Error.
+
+    post:
+      tags:
+        - room
+      summary: Create Room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomCreationRequest'
+      responses:
+        '201':
+          description: Room created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: Bad request. Invalid input.
+          content:
+            application/json:
+              example:
+                error: "Invalid input data."
+        '500':
+          description: Internal Server Error.
+
+  /api/v1/rooms/{roomName}:
+    get:
+      tags:
+        - room
+      summary: Get Room Details
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '404':
+          description: Room not found.
+          content:
+            application/json:
+              example:
+                error: "Room not found."
+        '500':
+          description: Internal Server Error.
+
+    put:
+      tags:
+        - room
+      summary: Update Room
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomCreationRequest'
+      responses:
+        '200':
+          description: Room updated successfully.
+        '404':
+          description: Room not found.
+          content:
+            application/json:
+              example:
+                error: "Room not found."
+        '400':
+          description: Bad request. Invalid input.
+          content:
+            application/json:
+              example:
+                error: "Invalid input data."
+        '500':
+          description: Internal Server Error.
+
+    delete:
+      tags:
+        - room
+      summary: Delete Room
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+      responses:
+        '204':
+          description: Room deleted successfully.
+        '404':
+          description: Room not found.
+          content:
+            application/json:
+              example:
+                error: "Room not found."
+        '500':
+          description: Internal Server Error.
+
+  /api/v1/rooms/{roomName}/token:
+    post:
+      tags:
+        - room
+      summary: Generate Token for Room
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+      responses:
+        '200':
+          description: Token generated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '404':
+          description: Room not found.
+          content:
+            application/json:
+              example:
+                error: "Room not found."
+        '500':
+          description: Internal Server Error.
+
+  /api/v1/rooms/{roomName}/participants:
+    get:
+      tags:
+        - room
+      summary: Get Participants in Room
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Participant'
+        '404':
+          description: Room not found.
+          content:
+            application/json:
+              example:
+                error: "Room not found."
+        '500':
+          description: Internal Server Error.
+
+  /api/v1/rooms/{roomName}/participants/{participantIdentity}/mute:
+    post:
+      tags:
+        - room
+      summary: Mute Participant in Room
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+        - in: path
+          name: participantIdentity
+          required: true
+          schema:
+            type: string
+          description: The ID of the participant to mute.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/muteRequest'
+      responses:
+        '200':
+          description: Participant muted successfully.
+        '404':
+          description: Room or participant not found.
+          content:
+            application/json:
+              example:
+                error: "Room or participant not found."
+        '500':
+          description: Internal Server Error.
+
+  /api/v1/rooms/{roomName}/participants/{participantIdentity}/canPublish:
+    post:
+      tags:
+        - room
+      summary: Stop Video Publish for Participant in Room
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+        - in: path
+          name: participantIdentity
+          required: true
+          schema:
+            type: string
+          description: The ID of the participant to stop video publishing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/canPublishRequest'
+      responses:
+        '200':
+          description: Video publishing stopped successfully.
+        '404':
+          description: Room or participant not found.
+          content:
+            application/json:
+              example:
+                error: "Room or participant not found."
+        '500':
+          description: Internal Server Error.
+
+  /api/v1/rooms/{roomName}/participants/{participantIdentity}/expel:
+    post:
+      tags:
+        - room
+      summary: Expel Participant from Room
+      parameters:
+        - in: path
+          name: roomName
+          required: true
+          schema:
+            type: string
+          description: The unique name of the room.
+        - in: path
+          name: participantIdentity
+          required: true
+          schema:
+            type: string
+          description: The ID of the participant to expel.
+      responses:
+        '200':
+          description: Participant expelled successfully.
+        '404':
+          description: Room or participant not found.
+          content:
+            application/json:
+              example:
+                error: "Room or participant not found."
+        '500':
+          description: Internal Server Error.
+  /api/v1/login:
+    post:
+      tags:
+        - Account
+      summary: User login
+      description: Authenticate a user and create a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+        '400':
+          description: Invalid request payload or format
+        '401':
+          description: Authentication failure
+        '500':
+          description: Internal server error
+
+  /api/v1/logout:
+    post:
+      tags:
+        - Account
+      summary: User logout
+      description: Invalidate the user session
+      responses:
+        '200':
+          description: Successful logout
+        '500':
+          description: Internal server error
+
+
+components:
+  schemas:
+    RoomCreationRequest:
+      type: object
+      properties:
+        program:
+          type: string
+          description: The program associated with the room.
+          example: ITE
+        course:
+          type: string
+          description: The course associated with the room.
+          example: BNA
+        professorClass:
+          type: string
+          description: The class associated with the room.
+          example: c1
+        time:
+          type: string
+          format: date-time
+          description: The date and time of the room.
+          example: 2023-11-26T22:00:00
+    Room:
+      type: object
+      properties:
+        name:
+          type: string
+        program:
+          type: string
+          example: ITE
+        course:
+          type: string
+          example: BNA401
+        professorClass:
+          type: string
+          example: c1
+        time:
+          type: string
+          format: date-time
+        broadcasterName:
+          type: string
+          example: Dr.Ahmed
+      xml:
+        name: Room
+    Participant:
+      type: object
+      properties:
+        name:
+          type: string
+        identity:
+          type: string
+    muteRequest:
+      type: object
+      properties:
+        mute:
+          type: boolean
+    canPublishRequest:
+      type: object
+      properties:
+        canPublish:
+          type: boolean
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+

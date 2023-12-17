@@ -67,7 +67,7 @@ public class RoomLiveKitService {
                     .setCanPublish(false).build();
             var response = roomServiceClient.updateParticipant(roomName,participant.getIdentity() , participant.getName(),
                     participant.getMetadata() , LivekitModels.ParticipantPermission.newBuilder()
-                            .setCanPublish(canPublish).build()).execute().body();
+                            .setCanPublish(canPublish).setCanPublishData(true).setCanSubscribe(true).build()).execute().body();
         } catch (IOException | NullPointerException e) {
             logger.error("Error change publish permission", e);
             throw new LiveKitException("Change publish permission");
