@@ -15,7 +15,7 @@ import java.util.Set;
 @Builder
 @Setter
 @Getter
-public class Room extends RepresentationModel<Room>{
+public class Room{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

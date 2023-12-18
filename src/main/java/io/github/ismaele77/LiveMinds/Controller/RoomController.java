@@ -48,12 +48,12 @@ RoomController {
     @GetMapping
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
      public ResponseEntity<CollectionModel<RoomDto>> findAll(HttpServletRequest request){
-        List<RoomDto> allRooms = new ArrayList<RoomDto>();
+        List<RoomDto> allRooms = new ArrayList<>();
         for (Room room : roomRepository.findAll()) {
             String roomName = room.getName();
             Link selfLink = linkTo(RoomController.class).slash(roomName).withSelfRel();
             RoomDto roomDto = new RoomDto();
-            roomDto.CreateNewUserDto(room);
+            roomDto.CreateNewRoomDto(room);
             roomDto.add(selfLink);
             allRooms.add(roomDto);
         }
@@ -66,12 +66,17 @@ RoomController {
 
     @GetMapping("/{roomName}")
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
-    ResponseEntity<EntityModel<RoomDto>> findByName(@PathVariable String roomName) {
+    ResponseEntity<RoomDto> findByName(@PathVariable String roomName) {
         Room room = roomRepository.findByName(roomName)
                 .orElseThrow(() -> new RoomNotFoundException(roomName));
 
         RoomDto roomDto = new RoomDto(room);
-        return ResponseEntity.ok(EntityModel.of(roomDto));
+        Link selfLink = linkTo(RoomController.class).slash(roomName).withSelfRel();
+        Link allRooms = linkTo(RoomController.class).withRel("rooms");
+        roomDto.add(selfLink);
+        roomDto.add(allRooms);
+
+        return ResponseEntity.ok(roomDto);
     }
 
 

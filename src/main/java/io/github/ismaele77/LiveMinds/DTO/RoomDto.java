@@ -19,9 +19,9 @@ public class RoomDto extends RepresentationModel<RoomDto> {
     public RoomDto(){
     }
     public RoomDto(Room room){
-        CreateNewUserDto(room);
+        CreateNewRoomDto(room);
     }
-    public void CreateNewUserDto(Room room){
+    public void CreateNewRoomDto(Room room){
         this.name = room.getName() ;
         this.program = room.getProgram();
         this.course = room.getCourse();
