@@ -1,13 +1,15 @@
 package io.github.ismaele77.LiveMinds.Service;
 
+import io.github.ismaele77.LiveMinds.DTO.TokenResponse;
 import io.github.ismaele77.LiveMinds.Exception.LiveKitException;
 import io.github.ismaele77.LiveMinds.Exception.RoomCreationException;
+import io.github.ismaele77.LiveMinds.Model.AppUser;
 import io.github.ismaele77.LiveMinds.Model.Room;
-import io.livekit.server.RoomServiceClient;
+import io.livekit.server.*;
 import livekit.LivekitModels;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import retrofit2.Call;
@@ -16,22 +18,21 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class RoomLiveKitService {
 
 
     private final RoomServiceClient roomServiceClient;
+    private final AccessToken accessToken;
     private static final Logger logger = LoggerFactory.getLogger(RoomLiveKitService.class);
     private final static int EMPTY_TIMEOUT = 3 * 60 * 60;
+    private static final int TOKEN_TIME_OUT = 2*60;
 
     //private final EgressServiceClient egressServiceClient;
-    @Autowired
-    public RoomLiveKitService(RoomServiceClient roomServiceClient){
-        this.roomServiceClient = roomServiceClient;
-    }
+
 
 
     public void CreateRoom(Room room){
@@ -93,6 +94,23 @@ public class RoomLiveKitService {
             logger.error("Error expel participant", e);
             throw new LiveKitException("Expel participant");
         }
+    }
+
+    public TokenResponse createAccessToken(Room room, AppUser userDetails) {
+        accessToken.setName(userDetails.getName());
+        accessToken.setIdentity(userDetails.getUsername());
+        accessToken.setTtl(TOKEN_TIME_OUT);
+
+        if (room.getBroadcaster().getId() == userDetails.getId()) {
+            accessToken.addGrants(new RoomJoin(true), new RoomAdmin(true),
+                    new RoomName(room.getName()), new CanPublish(true), new CanPublishData(true));
+        } else {
+            accessToken.addGrants(new RoomJoin(true), new RoomName(room.getName()),
+                    new CanPublish(false), new CanPublishData(true));
+        }
+        TokenResponse tokenResponse = new TokenResponse(accessToken.toJwt());
+
+        return tokenResponse;
     }
 
 //    private void startRecode(String roomName){

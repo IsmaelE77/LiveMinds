@@ -8,7 +8,7 @@ import org.springframework.hateoas.server.core.Relation;
 import java.time.LocalDateTime;
 
 @Data
-@Relation(collectionRelation = "rooms")
+@Relation(collectionRelation = "rooms") // to change name in findAll in room controller
 public class RoomDto extends RepresentationModel<RoomDto> {
     private String name;
     private String program;
@@ -21,9 +21,9 @@ public class RoomDto extends RepresentationModel<RoomDto> {
     public RoomDto(){
     }
     public RoomDto(Room room){
-        CreateNewRoomDto(room);
+        createNewRoomDto(room);
     }
-    public void CreateNewRoomDto(Room room){
+    public void createNewRoomDto(Room room){
         this.name = room.getName() ;
         this.program = room.getProgram();
         this.course = room.getCourse();

@@ -4,19 +4,16 @@ import io.github.ismaele77.LiveMinds.DTO.*;
 import io.github.ismaele77.LiveMinds.Enum.RoomStatus;
 import io.github.ismaele77.LiveMinds.Exception.AccessDeniedException;
 import io.github.ismaele77.LiveMinds.Exception.RoomNotFoundException;
-import io.github.ismaele77.LiveMinds.Exception.UserNotFoundException;
 import io.github.ismaele77.LiveMinds.Model.AppUser;
-import io.github.ismaele77.LiveMinds.Repository.AppUserRepository;
 import io.github.ismaele77.LiveMinds.Repository.RoomRepository;
 import io.github.ismaele77.LiveMinds.Model.Room;
 import io.github.ismaele77.LiveMinds.Service.RoomLiveKitService;
 import io.github.ismaele77.LiveMinds.Service.RoomService;
-import io.livekit.server.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,21 +36,19 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 public class
 RoomController {
 
-    private static final int TOKEN_TIME_OUT = 2*60;
     private final RoomRepository roomRepository;
     private final RoomLiveKitService roomLiveKit;
-    private final AccessToken accessToken;
     private final RoomService roomService;
 
     @GetMapping
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
-     public ResponseEntity<CollectionModel<RoomDto>> findAll(HttpServletRequest request){
+    public ResponseEntity<CollectionModel<RoomDto>> findAll(HttpServletRequest request) {
         List<RoomDto> allRooms = new ArrayList<>();
         for (Room room : roomRepository.findAll()) {
             String roomName = room.getName();
             Link selfLink = linkTo(RoomController.class).slash(roomName).withSelfRel();
             RoomDto roomDto = new RoomDto();
-            roomDto.CreateNewRoomDto(room);
+            roomDto.createNewRoomDto(room);
             roomDto.add(selfLink);
             allRooms.add(roomDto);
         }
@@ -67,9 +62,7 @@ RoomController {
     @GetMapping("/{roomName}")
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
     ResponseEntity<RoomDto> findByName(@PathVariable String roomName) {
-        Room room = roomRepository.findByName(roomName)
-                .orElseThrow(() -> new RoomNotFoundException(roomName));
-
+        Room room = retrieveRoomByName(roomName);
         RoomDto roomDto = new RoomDto(room);
         Link selfLink = linkTo(RoomController.class).slash(roomName).withSelfRel();
         Link allRooms = linkTo(RoomController.class).withRel("rooms");
@@ -83,12 +76,12 @@ RoomController {
     @PostMapping
     @PreAuthorize("hasRole('Professor')")
     public ResponseEntity<?> createRoom(
-            @RequestBody @Valid CreateRoomRequest createRoomRequest ,
-            Errors errors,  @AuthenticationPrincipal AppUser userDetails) {
-        if(errors.hasErrors()){
-            return ResponseEntity.badRequest().build();
+            @RequestBody @Valid CreateRoomRequest createRoomRequest,
+            Errors errors, @AuthenticationPrincipal AppUser userDetails) {
+        if (errors.hasErrors()) {
+            return handleValidationErrors();
         }
-        if(roomRepository.existsByName(createRoomRequest.getName())){
+        if (roomRepository.existsByName(createRoomRequest.getName())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",
                     "Room with name " + createRoomRequest.getName() + " already exists."));
         }
@@ -116,23 +109,20 @@ RoomController {
 
     @PatchMapping("/{roomName}")
     @PreAuthorize("hasRole('Professor')")
-    public ResponseEntity<?> updateRoom(@RequestBody @Valid CreateRoomRequest createRoomRequest ,
-                                        Errors errors , @PathVariable String roomName,
+    public ResponseEntity<?> updateRoom(@RequestBody @Valid CreateRoomRequest createRoomRequest,
+                                        Errors errors, @PathVariable String roomName,
                                         @AuthenticationPrincipal AppUser userDetails) {
-        Room room = roomRepository.findByName(roomName)
-                .orElseThrow(() -> new RoomNotFoundException(roomName));
-        if(room.getBroadcaster().getId() != userDetails.getId()){
-            throw new AccessDeniedException("update" + roomName);
+        if (errors.hasErrors()) {
+            return handleValidationErrors();
         }
-        if(errors.hasErrors()){
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error","Invalid input data"));
-        }
-        var bool = createRoomRequest.getTime().equals(room.getTime());
-        if(roomRepository.existsByName(createRoomRequest.getName())
-            && createRoomRequest.getTime().isEqual(room.getTime())){
+
+        Room room = retrieveRoomByName(roomName);
+        checkUserCreatedRoom(room, userDetails, "update" + roomName);
+
+        if (roomRepository.existsByName(createRoomRequest.getName())
+                && createRoomRequest.getTime().isEqual(room.getTime())) {
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(Map.of("message","Nothing change"));
+                    .body(Map.of("message", "Nothing change"));
         }
 
         room.setName(createRoomRequest.getName());
@@ -146,61 +136,44 @@ RoomController {
 
         //URI location = linkTo(RoomController.class).slash(room.getName()).toUri();
 
-        return ResponseEntity.ok().body(Map.of("message","Room updated successfully"));
+        return ResponseEntity.ok().body(Map.of("message", "Room updated successfully"));
     }
 
     @DeleteMapping("/{roomName}")
     @PreAuthorize("hasRole('Professor')")
     ResponseEntity<?> deleteByName(@PathVariable String roomName, @AuthenticationPrincipal AppUser userDetails) {
-        Room room = roomRepository.findByName(roomName)
-                .orElseThrow(() -> new RoomNotFoundException(roomName));
-        if(room.getBroadcaster().getId() != userDetails.getId()){
-            throw new AccessDeniedException("delete" + roomName);
-        }
-
+        Room room = retrieveRoomByName(roomName);
+        checkUserCreatedRoom(room, userDetails, "delete" + roomName);
         roomRepository.deleteById(room.getId());
-
-        return ResponseEntity.ok().body(Map.of("message","Room deleted successfully"));
+        return ResponseEntity.ok().body(Map.of("message", "Room deleted successfully"));
     }
 
     @GetMapping("/{roomName}/token")
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
     public ResponseEntity<?> getRoomToken(@PathVariable String roomName,
-        @AuthenticationPrincipal AppUser userDetails) {
-        Room room = roomRepository.findByName(roomName)
-                .orElseThrow(() -> new RoomNotFoundException(roomName));
-
-        if(room.getBannedUsers().contains(userDetails)){
+                                          @AuthenticationPrincipal AppUser userDetails) {
+        Room room = retrieveRoomByName(roomName);
+        if (room.getBannedUsers().contains(userDetails)) {
             throw new AccessDeniedException("get token");
         }
-        accessToken.setName(userDetails.getName());
-        accessToken.setIdentity(userDetails.getUsername());
-        accessToken.setTtl(TOKEN_TIME_OUT);
-        if (room.getBroadcaster().getId() == userDetails.getId()){
-            accessToken.addGrants(new RoomJoin(true), new RoomAdmin(true),  new RoomName(roomName) , new CanPublish(true) ,new CanPublishData(true));
-        }
-        else{
-            accessToken.addGrants(new RoomJoin(true), new RoomName(roomName) , new CanPublish(false) , new CanPublishData(true));
-        }
-        TokenResponse tokenResponse = new TokenResponse(accessToken.toJwt());
+        TokenResponse tokenResponse = roomLiveKit.createAccessToken(room, userDetails);
 
         return ResponseEntity.ok(tokenResponse);
     }
 
+
     @GetMapping("/{roomName}/participants")
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
-    public ResponseEntity<CollectionModel<ParticipantDto>> getParticipants(@PathVariable String roomName){
+    public ResponseEntity<CollectionModel<ParticipantDto>> getParticipants(@PathVariable String roomName) {
         if (!roomRepository.existsByName(roomName)) {
             throw new RoomNotFoundException(roomName);
         }
-        var roomParticipantsList = roomLiveKit.getParticipantList(roomName);
-        List<ParticipantDto> participantsInfo = new ArrayList<ParticipantDto>();
-        for (var participant : roomParticipantsList) {
-            ParticipantDto user = new ParticipantDto();
-            user.setName(participant.getName());
-            user.setIdentity(participant.getIdentity());
-            participantsInfo.add(user);
-        }
+        var participantsInfo = roomLiveKit.getParticipantList(roomName).stream()
+                .map(participant -> new ParticipantDto(
+                        participant.getName(),
+                        participant.getIdentity()
+                ))
+                .toList();
         Link link = linkTo(RoomController.class).withSelfRel();
         CollectionModel<ParticipantDto> result = CollectionModel.of(participantsInfo, link);
         return ResponseEntity.ok(result);
@@ -209,55 +182,64 @@ RoomController {
     @PostMapping("/{roomName}/participants/{participantIdentity}/canPublish")
     @PreAuthorize("hasRole('Professor')")
     public ResponseEntity<?> changePublishPermission
-            (@PathVariable String roomName ,
-            @PathVariable String participantIdentity ,
-            @RequestBody @Valid canPublishRequest req,
-            Errors errors,
-            @AuthenticationPrincipal AppUser userDetails){
-        if(errors.hasErrors()){
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error","Invalid input data"));
+            (@PathVariable String roomName,
+             @PathVariable String participantIdentity,
+             @RequestBody @Valid canPublishRequest req,
+             Errors errors,
+             @AuthenticationPrincipal AppUser userDetails) {
+        if (errors.hasErrors()) {
+            return handleValidationErrors();
         }
-        checkIfItHasRoom(roomName,userDetails,"change publish permission for participant");
-        roomLiveKit.changePublishPermission(roomName,participantIdentity,req.isCanPublish());
-        return ResponseEntity.ok(Map.of("message","Participant permission changed"));
+        Room room = retrieveRoomByName(roomName);
+        checkUserCreatedRoom(room, userDetails, "change publish permission for participant");
+        roomLiveKit.changePublishPermission(roomName, participantIdentity, req.isCanPublish());
+        return ResponseEntity.ok(Map.of("message", "Participant permission changed"));
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/mute")
     @PreAuthorize("hasRole('Professor')")
     public ResponseEntity<?> muteParticipant
-            (@PathVariable String roomName ,
-            @PathVariable String participantIdentity ,
-            @RequestBody @Valid muteRequest req,
-            Errors errors,
-            @AuthenticationPrincipal AppUser userDetails){
-        if(errors.hasErrors()){
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error","Invalid input data"));
+            (@PathVariable String roomName,
+             @PathVariable String participantIdentity,
+             @RequestBody @Valid muteRequest req,
+             Errors errors,
+             @AuthenticationPrincipal AppUser userDetails) {
+        if (errors.hasErrors()) {
+            return handleValidationErrors();
         }
-        checkIfItHasRoom(roomName,userDetails,"mute participant");
-        roomLiveKit.muteParticipant(roomName,participantIdentity,req.isMute());
-        return ResponseEntity.ok(Map.of("message","Participant was muted"));
+        Room room = retrieveRoomByName(roomName);
+        checkUserCreatedRoom(room, userDetails, "mute participant");
+        roomLiveKit.muteParticipant(roomName, participantIdentity, req.isMute());
+        return ResponseEntity.ok(Map.of("message", "Participant was muted"));
     }
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/expel")
     @PreAuthorize("hasRole('Professor')")
     public ResponseEntity<?> expelParticipant
-            (@PathVariable String roomName ,
+            (@PathVariable String roomName,
              @PathVariable String participantIdentity,
-             @AuthenticationPrincipal AppUser userDetails){
-        checkIfItHasRoom(roomName,userDetails,"expel participant");
-        roomLiveKit.expelParticipant(roomName,participantIdentity);
-        roomService.banUser(roomName,participantIdentity);
-        return ResponseEntity.ok(Map.of("message","Participant was expelled"));
+             @AuthenticationPrincipal AppUser userDetails) {
+        Room room = retrieveRoomByName(roomName);
+        checkUserCreatedRoom(room, userDetails, "expel participant");
+        roomLiveKit.expelParticipant(roomName, participantIdentity);
+        roomService.banUser(roomName, participantIdentity);
+        return ResponseEntity.ok(Map.of("message", "Participant was expelled"));
     }
 
-    private void checkIfItHasRoom(String roomName , AppUser user , String command){
-        Room room = roomRepository.findByName(roomName)
-                .orElseThrow(() -> new RoomNotFoundException(roomName));
-        if (room.getBroadcaster().getId() != user.getId()){
+    private void checkUserCreatedRoom(@NotNull Room room, @NotNull AppUser user, String command) {
+        if (!room.getBroadcaster().getId().equals(user.getId())) {
             throw new AccessDeniedException(command);
         }
+    }
+
+    private Room retrieveRoomByName(String roomName) {
+        return roomRepository.findByName(roomName)
+                .orElseThrow(() -> new RoomNotFoundException(roomName));
+    }
+
+    private ResponseEntity<?> handleValidationErrors() {
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", "Invalid request data"));
     }
 
 }
