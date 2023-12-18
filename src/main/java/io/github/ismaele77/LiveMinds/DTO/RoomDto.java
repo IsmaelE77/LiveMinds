@@ -3,10 +3,12 @@ package io.github.ismaele77.LiveMinds.DTO;
 import io.github.ismaele77.LiveMinds.Model.Room;
 import lombok.Data;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.time.LocalDateTime;
 
 @Data
+@Relation(collectionRelation = "rooms")
 public class RoomDto extends RepresentationModel<RoomDto> {
     private String name;
     private String program;
