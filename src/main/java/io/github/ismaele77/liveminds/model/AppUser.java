@@ -27,7 +27,7 @@ import java.util.*;
 public class AppUser implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Integer Id;
 
     @NotBlank(message = "UserName is mandatory")
     private String userName;
@@ -43,9 +43,9 @@ public class AppUser implements UserDetails {
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z]).{8,}$")
     private String password;
 
+    @ManyToOne
+    @JoinColumn(name = "role_id")
     @NotNull
-    @OneToOne
-    @JoinColumn(name = "ROLE_ID")
     private Role role;
 
     @JsonIgnore

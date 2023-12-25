@@ -84,16 +84,16 @@ public class RoomControllerTest {
     @BeforeEach
     public void init() {
         roomName = "TestRoom";
-        adminRole = new Role(1L, "Professor");
+        adminRole = new Role(1, "Professor");
         admin1 = new AppUser(
-                1L,
+                1,
                 "Ahmed_190735",
                 "Ahmed",
                 "ahmed@gmail.com",
                 "password",
                 adminRole,
                 null);
-        admin2 = new AppUser(2L,
+        admin2 = new AppUser(2,
                 "Samer_190734",
                 "Samer",
                 "samer@gmail.com",
@@ -301,7 +301,7 @@ public class RoomControllerTest {
     @Test
     @WithMockUser(roles = "Student")
     public void testGetTokenForBannedUser() throws Exception {
-        var admin = new AppUser(2L, "Samer_190734", "Samer", "samer@gmail.com", "password", adminRole, null);
+        var admin = new AppUser(2, "Samer_190734", "Samer", "samer@gmail.com", "password", adminRole, null);
         var room = new Room(1, "BNA401_ITE_c1", "ITE", "BNA401", "c1", LocalDateTime.of(2023, 11, 26, 12, 30), RoomStatus.NOT_STARTED.getValue(), admin1, List.of(admin));
         Mockito.when(roomService.findByNameOrThrow(roomName)).thenReturn(room);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/rooms/{roomName}/token", roomName)
