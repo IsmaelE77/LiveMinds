@@ -11,6 +11,11 @@ import io.github.ismaele77.liveminds.model.AppUser;
 import io.github.ismaele77.liveminds.model.Room;
 import io.github.ismaele77.liveminds.service.LiveKitService;
 import io.github.ismaele77.liveminds.service.RoomService;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +49,7 @@ public class RoomController {
     private final String ROOM_SIZE = "15";
 
     @PostMapping(value = "/search")
-    public ResponseEntity<?> search(@RequestBody @Valid SearchRequest request) {
+    public ResponseEntity<Page<RoomDto>> search(@RequestBody @Valid SearchRequest request) {
         log.info("Searching for rooms with request: {}", request);
         Page<Room> roomPage = roomService.search(request);
         var pagedModel = roomPage.map(assembler::toModel);
@@ -124,8 +129,8 @@ public class RoomController {
 
     @GetMapping("/{roomName}/token")
     @PreAuthorize("hasRole('Professor') || hasRole('Student')")
-    public ResponseEntity<?> getRoomToken(@PathVariable String roomName,
-                                          @AuthenticationPrincipal AppUser userDetails) {
+    public ResponseEntity<TokenResponse> getRoomToken(@PathVariable String roomName,
+                                                      @AuthenticationPrincipal AppUser userDetails) {
         log.info("Fetching token for room: {} by user: {}", roomName, userDetails.getUsername());
         Room room = roomService.findByNameOrThrow(roomName);
         if (room.getBannedUsers().contains(userDetails)) {
@@ -157,6 +162,10 @@ public class RoomController {
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/canPublish")
     @PreAuthorize("hasRole('Professor')")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    content = {@Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"string\"}"))})})
     public ResponseEntity<?> changePublishPermission
             (@PathVariable String roomName,
              @PathVariable String participantIdentity,
@@ -172,6 +181,10 @@ public class RoomController {
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/mute")
     @PreAuthorize("hasRole('Professor')")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    content = {@Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"string\"}"))})})
     public ResponseEntity<?> muteParticipant
             (@PathVariable String roomName,
              @PathVariable String participantIdentity,
@@ -189,6 +202,10 @@ public class RoomController {
 
     @PostMapping("/{roomName}/participants/{participantIdentity}/expel")
     @PreAuthorize("hasRole('Professor')")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    content = {@Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"string\"}"))})})
     public ResponseEntity<?> expelParticipant
             (@PathVariable String roomName,
              @PathVariable String participantIdentity,
