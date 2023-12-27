@@ -77,6 +77,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, SecurityContextRepository repo) throws Exception {
         http
                 .authorizeHttpRequests(requests -> requests
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/v1/login").permitAll()
                         .requestMatchers("/api/v1/logout").permitAll()
                         .requestMatchers("/webhook-endpoint").permitAll()

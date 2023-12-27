@@ -5,6 +5,7 @@ import io.github.ismaele77.liveminds.exception.RoomNotFoundException;
 import io.github.ismaele77.liveminds.service.LiveKitService;
 import io.github.ismaele77.liveminds.service.RoomService;
 import io.livekit.server.WebhookReceiver;
+import io.swagger.v3.oas.annotations.Hidden;
 import livekit.LivekitWebhook;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/webhook-endpoint")
 @Slf4j
+@Hidden //hidden controller from swagger docs
 public class WebhookController {
 
     private final WebhookReceiver webhookReceiver;
