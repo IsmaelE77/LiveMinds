@@ -1,6 +1,10 @@
 package io.github.ismaele77.liveminds.controller;
 
 import io.github.ismaele77.liveminds.dto.LoginDto;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,6 +36,10 @@ public class AccountController {
     private final SecurityContextLogoutHandler logoutHandler;
 
     @PostMapping("/login")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    content = {@Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"string\" ,\"status\": \"string\"}"))})})
     public ResponseEntity<?> performLogin(@RequestBody @Valid LoginDto loginRequest, HttpServletRequest request, HttpServletResponse response) {
         log.info("Attempting login for user: {}", loginRequest.getUsername());
         try {
@@ -59,6 +67,10 @@ public class AccountController {
     }
 
     @PostMapping("/logout")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    content = {@Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"message\": \"string\" ,\"status\": \"string\"}"))})})
     public ResponseEntity<?> performLogout(HttpServletRequest request, HttpServletResponse response) {
         log.info("Attempting logout.");
         try {
