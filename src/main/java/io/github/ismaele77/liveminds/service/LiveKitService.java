@@ -8,8 +8,7 @@ import io.github.ismaele77.liveminds.model.Room;
 import io.livekit.server.*;
 import livekit.LivekitModels;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import retrofit2.Call;
@@ -17,17 +16,16 @@ import retrofit2.Call;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class LiveKitService {
 
 
     private final RoomServiceClient roomServiceClient;
     private final AccessToken accessToken;
-    private static final Logger logger = LoggerFactory.getLogger(LiveKitService.class);
     private final static int EMPTY_TIMEOUT = 3 * 60 * 60;
     private static final int TOKEN_TIME_OUT = 2 * 60;
 
@@ -39,27 +37,32 @@ public class LiveKitService {
         Call<LivekitModels.Room> call = roomServiceClient.createRoom(room.getName(), roomTime);
         try {
             call.execute();
+            log.info("Room created successfully. Name: {}", room.getName());
         } catch (IOException e) {
-            logger.error("Error creating room", e);
+            log.error("Error creating room", e);
             throw new RoomCreationException();
         }
     }
 
     public void deleteRoom(String name) {
         roomServiceClient.deleteRoom(name);
+        log.info("Room deleted successfully. Name: {}", name);
     }
 
     @Transactional
     public void updateRoom(Room room) {
         deleteRoom(room.getName());
         createRoom(room);
+        log.info("Room updated successfully. Name: {}", room.getName());
     }
 
     public List<LivekitModels.ParticipantInfo> getParticipantList(String roomName) {
         try {
-            return roomServiceClient.listParticipants(roomName).execute().body();
+            List<LivekitModels.ParticipantInfo> participantList = roomServiceClient.listParticipants(roomName).execute().body();
+            log.info("Retrieved participant list successfully for room: {}", roomName);
+            return participantList;
         } catch (IOException e) {
-            logger.error("Error get participant list", e);
+            log.error("Error getting participant list for room: {}", roomName, e);
             throw new LiveKitException("Get participant list");
         }
     }
@@ -67,13 +70,14 @@ public class LiveKitService {
     public void changePublishPermission(String roomName, String participantIdentity, boolean canPublish) {
         try {
             LivekitModels.ParticipantInfo participant = roomServiceClient.getParticipant(roomName, participantIdentity).execute().body();
-            LivekitModels.ParticipantPermission.newBuilder()
+            LivekitModels.ParticipantPermission permission = LivekitModels.ParticipantPermission.newBuilder()
                     .setCanPublish(false).build();
             var response = roomServiceClient.updateParticipant(roomName, participant.getIdentity(), participant.getName(),
                     participant.getMetadata(), LivekitModels.ParticipantPermission.newBuilder()
                             .setCanPublish(canPublish).setCanPublishData(true).setCanSubscribe(true).build()).execute().body();
+            log.info("Changed publish permission successfully for participant {} in room {}", participantIdentity, roomName);
         } catch (IOException | NullPointerException e) {
-            logger.error("Error change publish permission", e);
+            log.error("Error changing publish permission for participant {} in room {}", participantIdentity, roomName, e);
             throw new LiveKitException("Change publish permission");
         }
     }
@@ -84,8 +88,9 @@ public class LiveKitService {
             for (var trackInfo : participant.getTracksList())
                 if (trackInfo.getType() == LivekitModels.TrackType.AUDIO)
                     roomServiceClient.mutePublishedTrack(roomName, participantIdentity, trackInfo.getSid(), mute).execute().body();
+            log.info("Muted participant {} in room {}", participantIdentity, roomName);
         } catch (IOException | NullPointerException e) {
-            logger.error("Error mute participant", e);
+            log.error("Error muting participant {} in room {}", participantIdentity, roomName, e);
             throw new LiveKitException("Mute participant");
         }
     }
@@ -93,8 +98,9 @@ public class LiveKitService {
     public void expelParticipant(String roomName, String participantIdentity) {
         try {
             roomServiceClient.removeParticipant(roomName, participantIdentity).execute().body();
+            log.info("Expelled participant {} from room {}", participantIdentity, roomName);
         } catch (IOException e) {
-            logger.error("Error expel participant", e);
+            log.error("Error expelling participant {} from room {}", participantIdentity, roomName, e);
             throw new LiveKitException("Expel participant");
         }
     }
@@ -113,6 +119,7 @@ public class LiveKitService {
         }
         TokenResponse tokenResponse = new TokenResponse(accessToken.toJwt());
 
+        log.info("Created access token for user {} in room {}", userDetails.getUsername(), room.getName());
         return tokenResponse;
     }
 
@@ -149,10 +156,4 @@ public class LiveKitService {
         return (int) (seconds + EMPTY_TIMEOUT);
     }
 
-    private int calculateSecondsDifference(Calendar calendar1, Calendar calendar2) {
-        long milliseconds1 = calendar1.getTimeInMillis();
-        long milliseconds2 = calendar2.getTimeInMillis();
-        long diff = milliseconds2 - milliseconds1;
-        return (int) (diff / 1000);
-    }
 }

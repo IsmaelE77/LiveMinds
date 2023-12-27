@@ -6,18 +6,19 @@ import io.github.ismaele77.liveminds.service.LiveKitService;
 import io.github.ismaele77.liveminds.service.RoomService;
 import io.livekit.server.WebhookReceiver;
 import livekit.LivekitWebhook;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/webhook-endpoint")
+@Slf4j
 public class WebhookController {
 
     private final WebhookReceiver webhookReceiver;
     private final RoomService roomService;
     private final LiveKitService liveKitService;
-    private static final Logger logger = LoggerFactory.getLogger(WebhookController.class);
 
     public WebhookController(WebhookReceiver webhookReceiver, RoomService roomService, LiveKitService liveKitService) {
         this.webhookReceiver = webhookReceiver;
@@ -30,7 +31,7 @@ public class WebhookController {
         LivekitWebhook.WebhookEvent event = webhookReceiver.receive(postBody, authorizationHeader);
         String roomName = event.getRoom().getName();
 
-        logger.info("Received webhook event: {}", event.getEvent());
+        log.info("Received webhook event: {}", event.getEvent());
 
         switch (event.getEvent()) {
             case "room_started":
@@ -46,12 +47,12 @@ public class WebhookController {
                 handleParticipantLeft(event);
                 break;
             default:
-                logger.warn("Unhandled webhook event: {}", event.getEvent());
+                log.warn("Unhandled webhook event: {}", event.getEvent());
         }
     }
 
     private void handleRoomStarted(String roomName) {
-        logger.info("The room {} started", roomName);
+        log.info("The room {} started", roomName);
     }
 
     private void handleRoomFinished(LivekitWebhook.WebhookEvent event) {
@@ -62,7 +63,7 @@ public class WebhookController {
                 && event.getRoom().getNumParticipants() == 0) {
             liveKitService.deleteRoom(room.getName());
             roomService.deleteByName(room.getName());
-            logger.info("The room {} deleted", roomName);
+            log.info("The room {} deleted", roomName);
         }
     }
 
