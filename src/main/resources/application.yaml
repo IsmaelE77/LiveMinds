@@ -17,4 +17,13 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-
+#Set root logging level
+logging:
+  level:
+    root: INFO
+    io.github.ismaele77.liveminds: DEBUG
+  file:
+    name: application.log
+    max-history: 1
+    max-size: 10MB
+    clean-history-on-start: true
