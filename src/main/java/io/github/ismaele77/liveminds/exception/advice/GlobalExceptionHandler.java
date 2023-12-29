@@ -7,6 +7,7 @@ import io.github.ismaele77.liveminds.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     SecurityResponse handleAccessDeniedException(AccessDeniedException ex) {
         log.error("Access Denied Exception: {}", ex.getMessage(), ex);
+        return new SecurityResponse(ex.getMessage());
+    }
+    
+    @ResponseBody
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    SecurityResponse authSecurityResponse(AuthenticationException ex) {
         return new SecurityResponse(ex.getMessage());
     }
 

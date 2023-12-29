@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -25,6 +26,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
 
 import org.springframework.security.test.context.support.WithMockUser;
@@ -126,14 +128,11 @@ public class RoomControllerTest {
     @Test
     @WithMockUser(roles = "Student")
     public void testFindAllRooms() throws Exception {
-
-        Page<Room> roomPage = new PageImpl<>(Collections.singletonList(room1));
-
         // Mock the service method
-        Mockito.when(roomService.findAll(1, 1)).thenReturn(roomPage);
+        Mockito.when(roomService.findAll(0, 15)).thenReturn(Page.empty());
 
         // Mock the paged resources assembler
-        Mockito.when(pagedResourcesAssembler.toModel(roomPage, assembler)).thenReturn(null);
+        Mockito.when(pagedResourcesAssembler.toModel(Page.empty(), assembler)).thenReturn(PagedModel.empty());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/rooms")
                         .param("page", "0")
@@ -243,7 +242,7 @@ public class RoomControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRoomRequest)))
                 .andExpect(content().json("{\n" +
-                        "  \"message\": \"Nothing change\"\n" +
+                        "  \"message\": \"Nothing changed\"\n" +
                         "}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
@@ -267,7 +266,8 @@ public class RoomControllerTest {
 
         Mockito.when(roomService.findByNameOrThrow(roomName)).thenThrow(new RoomNotFoundException(roomName));
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/rooms/{roomName}", roomName))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/rooms/{roomName}", roomName)
+                        .with(user(admin1)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 

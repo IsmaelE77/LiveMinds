@@ -23,7 +23,7 @@ import java.util.*;
 @NoArgsConstructor
 @Setter
 @Getter
-@JsonIgnoreProperties({"broadcaster", "bannedUsers"})
+@JsonIgnoreProperties({"Id", "password", "broadcaster", "bannedUsers"})
 public class AppUser implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
