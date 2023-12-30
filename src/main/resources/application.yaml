@@ -1,10 +1,10 @@
 server:
   servlet:
     session:
-      timeout: 10800
+      timeout: 15d
       cookie:
-        max-age: 1800
         secure: true
+        name: LIVEMINDS_COOKIE
         http-only: true
 
 spring:
