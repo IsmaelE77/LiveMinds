@@ -11,7 +11,7 @@ participants.
 - Students can view a list of upcoming lectures and register to attend.
 - Students can participate in the lecture via audio, video, or chat.
 
-### [livekit][(https://livekit.io)
+### [livekit](https://livekit.io)
 LiveKit is an open source alternative to Agora or Twilio,
 Build live video and audio applications using a modern, end-to-end WebRTC stack.
 [docs](https://docs.livekit.io/realtime/)
