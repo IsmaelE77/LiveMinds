@@ -11,10 +11,10 @@ participants.
 - Students can view a list of upcoming lectures and register to attend.
 - Students can participate in the lecture via audio, video, or chat.
 
-### (livekit)[https://livekit.io/] 
+### [livekit][(https://livekit.io)
 LiveKit is an open source alternative to Agora or Twilio,
 Build live video and audio applications using a modern, end-to-end WebRTC stack.
-(docs)[https://docs.livekit.io/realtime/]
+[docs](https://docs.livekit.io/realtime/)
 
 ### Liveminds
 Livekit server provides server-side libraries that allow the developer to control Livekit using API key and secret.
@@ -30,6 +30,6 @@ Liveminds manages the broadcast and full permissions.
 #### documentation
 The server provides a restful API service for all the required services,
 and the documents can be viewed at the following link (it may be slow to open because hosting is free):
-(documentation)[https://liveminds.onrender.com/swagger-ui/index.html]
+[documentation](https://liveminds.onrender.com/swagger-ui/index.html)
 
 
