@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @AllArgsConstructor
@@ -21,7 +21,7 @@ public class CreateRoomRequest {
 
     @NotNull
     @Future(message = "The time must be in the future")
-    private LocalDateTime time;
+    private OffsetDateTime time;
 
     public String getName() {
         return program + "_" + course + "_" + professorClass;

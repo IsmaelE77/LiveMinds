@@ -35,6 +35,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 
@@ -106,7 +108,7 @@ public class RoomControllerTest {
                 "ITE",
                 "BNA401",
                 "c1",
-                LocalDateTime.of(2024, 11, 26, 12, 30),
+                OffsetDateTime.of(2029, 11, 26, 12, 30,0,0, ZoneOffset.UTC),
                 RoomStatus.NOT_STARTED.getValue(),
                 admin1,
                 Collections.emptyList());
@@ -115,14 +117,15 @@ public class RoomControllerTest {
                 "ITE",
                 "BNA401",
                 "c1",
-                LocalDateTime.of(2024, 11, 26, 12, 30),
+                OffsetDateTime.of(2029, 11, 26, 12, 30,0,0, ZoneOffset.UTC),
                 RoomStatus.NOT_STARTED.getValue(),
                 admin2, Collections.emptyList());
         createRoomRequest = new CreateRoomRequest(
                 "ITE",
                 "BNA",
                 "C2",
-                LocalDateTime.of(2024, 11, 12, 12, 30));
+                OffsetDateTime.of(2029, 11, 26, 12, 30,0,0, ZoneOffset.UTC)
+        );
     }
 
     @Test
@@ -193,9 +196,8 @@ public class RoomControllerTest {
     @Test
     @WithMockUser(roles = "Professor")
     public void testUpdateRoom() throws Exception {
-        Mockito.when(roomService.existsByName(createRoomRequest.getName())).thenReturn(true);
-        Mockito.when(roomService.findByNameOrThrow(roomName)).thenReturn(room1);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/rooms/{roomName}", roomName)
+        Mockito.when(roomService.findByNameOrThrow(room1.getName())).thenReturn(room1);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/rooms/{roomName}", room1.getName())
                         .with(user(admin1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRoomRequest)))
@@ -232,12 +234,11 @@ public class RoomControllerTest {
     @Test
     @WithMockUser(roles = "Professor")
     public void testUpdateRoomWithNotChange() throws Exception {
-        LocalDateTime specificDateTime = LocalDateTime.of(2024, 11, 26, 12, 30);
-        Room room = new Room(1, "BNA401_ITE_c1", "ITE", "BNA401", "c1", specificDateTime, RoomStatus.NOT_STARTED.getValue(), admin1, Collections.emptyList());
+        OffsetDateTime specificDateTime = OffsetDateTime.of(2026, 11, 26, 12, 30,0,0, ZoneOffset.UTC);
+        Room room = new Room(1, "ITE_BNA401_c1", "ITE", "BNA401", "c1", specificDateTime, RoomStatus.NOT_STARTED.getValue(), admin1, Collections.emptyList());
         CreateRoomRequest createRoomRequest = new CreateRoomRequest("ITE", "BNA401", "c1", specificDateTime);
-        Mockito.when(roomService.existsByName(createRoomRequest.getName())).thenReturn(true);
-        Mockito.when(roomService.findByNameOrThrow(roomName)).thenReturn(room1);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/rooms/{roomName}", roomName)
+        Mockito.when(roomService.findByNameOrThrow(room.getName())).thenReturn(room);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/rooms/{roomName}", room.getName())
                         .with(user(admin1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRoomRequest)))
@@ -302,7 +303,7 @@ public class RoomControllerTest {
     @WithMockUser(roles = "Student")
     public void testGetTokenForBannedUser() throws Exception {
         var admin = new AppUser(2, "Samer_190734", "Samer", "samer@gmail.com", "password", adminRole, null);
-        var room = new Room(1, "BNA401_ITE_c1", "ITE", "BNA401", "c1", LocalDateTime.of(2023, 11, 26, 12, 30), RoomStatus.NOT_STARTED.getValue(), admin1, List.of(admin));
+        var room = new Room(1, "BNA401_ITE_c1", "ITE", "BNA401", "c1",OffsetDateTime.of(2024, 11, 26, 12, 30,0,0, ZoneOffset.UTC), RoomStatus.NOT_STARTED.getValue(), admin1, List.of(admin));
         Mockito.when(roomService.findByNameOrThrow(roomName)).thenReturn(room);
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/rooms/{roomName}/token", roomName)
                         .with(user(admin)))

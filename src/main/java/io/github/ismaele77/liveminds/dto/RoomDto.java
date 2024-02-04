@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.Relation;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @AllArgsConstructor
@@ -18,7 +18,7 @@ public class RoomDto extends RepresentationModel<RoomDto> {
     private String program;
     private String course;
     private String professorClass;
-    private LocalDateTime time;
+    private OffsetDateTime time;
     private String status;
     private String broadcasterName;
 

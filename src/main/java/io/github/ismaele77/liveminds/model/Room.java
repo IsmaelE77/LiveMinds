@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -35,7 +36,8 @@ public class Room {
     private String professorClass;
 
     @NotNull
-    private LocalDateTime time;
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime time;
 
     @NotBlank
     private String status;

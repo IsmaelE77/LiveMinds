@@ -13,7 +13,6 @@ import io.github.ismaele77.liveminds.service.LiveKitService;
 import io.github.ismaele77.liveminds.service.RoomService;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -106,7 +105,7 @@ public class RoomController {
         Room room = roomService.findByNameOrThrow(roomName);
         checkUserCreatedRoom(room, userDetails, "update" + roomName);
 
-        if (roomRequest.getTime().isEqual(room.getTime())) {
+        if (roomRequest.getTime().isEqual(room.getTime()) && roomRequest.getName().equals(roomName)) {
             log.info("Nothing changed. Room time remains the same.");
             return ResponseEntity.status(HttpStatus.OK)
                     .body(Map.of("message", "Nothing changed"));

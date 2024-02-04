@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import retrofit2.Call;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Component
@@ -144,16 +144,14 @@ public class LiveKitService {
 //    }
 
     private int getRoomTime(Room room) {
-        // Get the current LocalDateTime
-        LocalDateTime now = LocalDateTime.now();
+        // Current time in UTC
+        OffsetDateTime now = OffsetDateTime.now();
 
-        // Calculate the duration between the two LocalDateTime instances
-        Duration duration = Duration.between(room.getTime(), now);
+        // Calculate the time difference in seconds
+        long secondsDifference = ChronoUnit.SECONDS.between(now, room.getTime());
 
-        // Get the total number of seconds
-        long seconds = duration.getSeconds();
-
-        return (int) (seconds + EMPTY_TIMEOUT);
+        //check if time bigger than Integer.MAX_VALUE then return Integer.MAX_VALUE instead it
+        return (secondsDifference + EMPTY_TIMEOUT) > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) (secondsDifference + EMPTY_TIMEOUT);
     }
 
 }

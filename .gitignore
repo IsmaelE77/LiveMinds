@@ -48,3 +48,5 @@ buildNumber.properties
 .jpb
 qodana.yaml
 .github!/.github/
+!/application.log.2024-01-29.0.gz
+/.vscode/settings.json

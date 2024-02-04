@@ -13,11 +13,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone=UTC
   flyway:
     enabled: true
     baseline-on-migrate: true
+  
+hibernate:
+  jdbc:
+    time_zone=UTC
 
-#Set root logging level
 logging:
   level:
     root: INFO
