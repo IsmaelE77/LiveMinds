@@ -67,6 +67,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("HEAD",
                 "GET", "PUT", "POST", "DELETE", "PATCH"));
+        configuration.setAllowCredentials(true);
         // For CORS response headers
         configuration.addAllowedOrigin("*");
         configuration.addAllowedHeader("*");
