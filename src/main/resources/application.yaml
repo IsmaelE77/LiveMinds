@@ -3,7 +3,7 @@ server:
     session:
       timeout: 15d
       cookie:
-        secure: true
+        secure: false
         name: LIVEMINDS_COOKIE
         http-only: true
         maxAge: 15d
