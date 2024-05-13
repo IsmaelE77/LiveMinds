@@ -6,6 +6,9 @@ server:
         secure: true
         name: LIVEMINDS_COOKIE
         http-only: true
+        maxAge: 15d
+
+
 
 spring:
   config:
